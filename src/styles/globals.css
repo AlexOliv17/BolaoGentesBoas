@@ -1,0 +1,300 @@
+/*
+ * globals.css — BolaoGB
+ * Organizado com @layer para controle preciso da cascata.
+ * Importa tokens.css primeiro (feito no layout.tsx via next/font + import).
+ */
+
+@import './tokens.css';
+
+/* ─────────────────────────────────────────────────────────
+   LAYER: reset
+   ───────────────────────────────────────────────────────── */
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    scroll-behavior: smooth;
+
+    @media (prefers-reduced-motion: reduce) {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    display: block;
+    max-width: 100%;
+  }
+
+  input,
+  button,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    overflow-wrap: break-word;
+  }
+
+  ul,
+  ol {
+    list-style: none;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  button {
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   LAYER: base
+   ───────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    font-size: 100%;
+  }
+
+  body {
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    font-weight: var(--font-normal);
+    color: var(--color-text);
+    background-color: var(--color-bg);
+    min-height: 100dvh;
+  }
+
+  /* Hierarquia tipográfica — fonte display para títulos */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: var(--font-bold);
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--color-text);
+  }
+
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-body);
+    font-weight: var(--font-semibold);
+    line-height: 1.3;
+    color: var(--color-text);
+  }
+
+  h1 { font-size: var(--text-4xl); }
+  h2 { font-size: var(--text-3xl); }
+  h3 { font-size: var(--text-2xl); }
+  h4 { font-size: var(--text-xl); }
+  h5 { font-size: var(--text-lg); }
+  h6 { font-size: var(--text-base); }
+
+  p {
+    font-size: var(--text-base);
+    line-height: 1.65;
+    color: var(--color-text);
+  }
+
+  small {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  /* Links interativos */
+  a:hover {
+    color: var(--color-brand-gold);
+  }
+
+  /* Focus visible — acessibilidade de teclado */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 3px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Inputs — garantir 16px+ para evitar zoom no iOS */
+  input,
+  textarea,
+  select {
+    font-size: max(var(--text-base), 16px);
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    min-height: var(--touch-min);
+    padding: var(--space-3) var(--space-4);
+    width: 100%;
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+
+    &::placeholder {
+      color: var(--color-text-disabled);
+    }
+
+    &:focus-visible {
+      border-color: var(--color-brand-green-light);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-brand-green) 25%, transparent);
+      outline: none;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  /* Separador */
+  hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Scrollbar (Webkit) */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-subtle);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+
+    &:hover {
+      background: var(--color-text-disabled);
+    }
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   LAYER: components (globais)
+   ───────────────────────────────────────────────────────── */
+@layer components {
+  /* Container responsivo */
+  .container {
+    width: 100%;
+    max-width: var(--container-max);
+    margin-inline: auto;
+    padding-inline: var(--container-pad);
+  }
+
+  /* Skip link para acessibilidade */
+  .skip-link {
+    position: absolute;
+    top: -100%;
+    left: var(--space-4);
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-brand-green);
+    color: var(--color-text);
+    border-radius: var(--radius-md);
+    font-weight: var(--font-semibold);
+    z-index: var(--z-toast);
+
+    &:focus {
+      top: var(--space-4);
+    }
+  }
+
+  /* Texto de erro semântico */
+  .field-error {
+    font-size: var(--text-sm);
+    color: var(--color-error-text);
+    margin-top: var(--space-1);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────
+   LAYER: utilities
+   ───────────────────────────────────────────────────────── */
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .text-display {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .text-muted {
+    color: var(--color-text-muted);
+  }
+
+  .text-center { text-align: center; }
+  .text-left   { text-align: left; }
+  .text-right  { text-align: right; }
+
+  /* Animações — respeitam prefers-reduced-motion */
+  @media (prefers-reduced-motion: no-preference) {
+    .animate-fade-in {
+      animation: fadeIn var(--duration-base) var(--ease-out) forwards;
+    }
+
+    .animate-slide-up {
+      animation: slideUp var(--duration-slow) var(--ease-spring) forwards;
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

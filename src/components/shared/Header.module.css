@@ -1,0 +1,123 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-overlay);
+  background-color: color-mix(in srgb, var(--color-bg) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border-subtle);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  height: 60px;
+}
+
+/* ─── Logo ─────────────────────────────────────── */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity var(--transition-fast);
+
+  &:hover {
+    opacity: 0.85;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+.logoIconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border-subtle);
+  flex-shrink: 0;
+}
+
+.logoIcon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centraliza Copa acima de Gentes Boas */
+  line-height: 1;
+  color: var(--color-brand-gold); /* Cor secundária */
+}
+
+.logoTextTop {
+  font-family: var(--font-body);
+  font-weight: var(--font-bold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 2px;
+}
+
+.logoTextBottom {
+  font-family: var(--font-display);
+  font-weight: var(--font-bold);
+  font-size: var(--text-base); /* Menor que o antigo, mas legível */
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Nav ───────────────────────────────────────── */
+.navList {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navLink {
+  display: inline-flex;
+  align-items: center;
+  height: var(--touch-min);
+  padding-inline: var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-muted);
+  border-radius: var(--radius-md);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-text);
+    background-color: var(--color-surface);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+/* CTA de cadastro */
+.navCta {
+  background-color: var(--color-brand-green);
+  color: var(--color-text);
+  font-weight: var(--font-bold);
+
+  &:hover {
+    background-color: var(--color-brand-green-light);
+    color: var(--color-text);
+  }
+}
