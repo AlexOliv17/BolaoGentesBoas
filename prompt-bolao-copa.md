@@ -8,7 +8,7 @@
 
 Você é um engenheiro full-stack sênior. Vamos construir, do zero ao deploy, um **bolão da Copa do Mundo 2026** para um grupo de amigos. Requisitos transversais que valem para TODO o projeto:
 
-- **Stack obrigatória (tudo no plano grátis):** Next.js (App Router, TypeScript) hospedado na Vercel; Supabase para Postgres + Auth + Storage + agendamento (pg_cron + pg_net); Resend para e-mails; football-data.org como fonte dos jogos.
+- **Stack obrigatória (tudo no plano grátis):** Next.js (App Router, TypeScript) hospedado na Vercel; Supabase para Postgres + Auth + Storage + agendamento (pg_cron + pg_net); Nodemailer + SMTP gratuito (ex: Gmail) para e-mails; football-data.org como fonte dos jogos.
 - **Mobile-first (alvo principal):** não haverá app de loja; o acesso será 100% via navegador, predominantemente no **celular**. Projete todas as telas começando pela largura de smartphone (~360–390px) e escale para tablet/desktop depois. Use layout fluido (flexbox/grid), `rem`/unidades relativas, imagens responsivas e respeite áreas de toque ≥ 44px. Inclua a meta tag `viewport` correta. Teste cada tela em 360px, 768px e 1280px antes de dar a fase como pronta.
 - **Não comercial:** uso entre amigos, sem cobrança. (Importante porque o Hobby da Vercel é só para uso pessoal.)
 - **Segurança primeiro:** nunca armazene senha em texto puro (a Auth do Supabase já cuida disso); habilite **Row Level Security (RLS)** em todas as tabelas; nunca exponha a `service_role key` no cliente.
@@ -52,7 +52,7 @@ Entregue um diagrama textual das relações e as policies de RLS por tabela (ex.
 - **Amizade por código:** cada usuário pode gerar um `friend_invite_code`; outro usuário insere o código e dispara um pedido de amizade.
 - **Amizade por busca:** buscar usuários por `username`/`nickname` e enviar pedido.
 - Aceitar / recusar pedidos; listar amigos.
-- (Opcional) e-mail de aviso "fulano te enviou um pedido de amizade" via Resend.
+- (Opcional) e-mail de aviso "fulano te enviou um pedido de amizade" via SMTP.
 
 **Aceite:** troco foto e apelido; gero código; outro usuário me adiciona por código e por busca; aceito o pedido e viramos amigos.
 
@@ -116,10 +116,11 @@ Objetivo: enviar e-mail para o usuário que **ainda não palpitou** um jogo, qua
 - **Agendamento (escolha A, recomendada):** use **pg_cron do Supabase** rodando **a cada minuto** uma função que:
   1. seleciona jogos com `kickoff_at` entre `now()+29min` e `now()+31min` e `status = 'scheduled'`;
   2. para cada membro de cada bolão que tem esse jogo **sem palpite** e **sem registro em `notifications_log`** para `type='reminder_30min'`;
-  3. dispara o e-mail (via `pg_net` chamando uma rota `/api/cron/reminders` do Next.js, que usa o Resend) e grava em `notifications_log` para garantir idempotência.
+  3. dispara o e-mail (via `pg_net` chamando uma rota `/api/cron/reminders` do Next.js, que usa Nodemailer + SMTP) e grava em `notifications_log` para garantir idempotência.
 - **Agendamento (escolha B, alternativa sem pg_cron):** agendador externo grátis (ex.: cron-job.org) batendo de 5 em 5 min na rota `/api/cron/reminders`, protegida por um header secreto (`CRON_SECRET`).
 - **Não use o cron nativo da Vercel no plano grátis para isto:** ele só roda 1x/dia e pode atrasar ~59 min.
 - Proteja a rota de cron com `CRON_SECRET` (rejeite quem não mandar o header correto). Garanta idempotência para não spammar.
+- **NOTA IMPORTANTE SOBRE CUSTOS:** Como optamos pelo fluxo 100% gratuito sem compra de domínios, a confirmação de e-mail no cadastro fica **desativada**. Os e-mails (como lembretes e recuperação de senha) serão disparados via SMTP (Nodemailer usando uma conta do Gmail, por exemplo).
 
 **Aceite:** crio um jogo de teste começando em ~30 min, deixo um usuário sem palpite, e ele recebe exatamente UM e-mail; quem já palpitou não recebe.
 
@@ -128,7 +129,7 @@ Objetivo: enviar e-mail para o usuário que **ainda não palpitou** um jogo, qua
 ## 9. Segurança, privacidade e qualidade
 
 - RLS em todas as tabelas; teste que um usuário não consegue ler palpites/bolões de terceiros.
-- Variáveis sensíveis (chaves Supabase service_role, Resend, football-data.org, CRON_SECRET) **só no servidor**.
+- Variáveis sensíveis (chaves Supabase service_role, credenciais SMTP, football-data.org, CRON_SECRET) **só no servidor**.
 - Validação de entrada em todas as rotas (zod ou equivalente).
 - Tratamento de erros e estados de carregamento na UI.
 - **Responsividade obrigatória:** toda tela deve funcionar bem no celular (sem rolagem horizontal, sem corte de conteúdo, botões e inputs confortáveis ao toque). O ranking, a lista de jogos e o formulário de palpite são os pontos críticos — garanta que ficam legíveis e operáveis numa tela de 360px. Considere tabelas roláveis ou em formato de cards no mobile.
@@ -141,11 +142,11 @@ Objetivo: enviar e-mail para o usuário que **ainda não palpitou** um jogo, qua
 - Suba o banco e as policies no **Supabase** (projeto grátis); ative as extensões `pg_cron` e `pg_net`; agende o job de lembrete e o de sincronização diária.
 - Faça deploy do Next.js na **Vercel** (Hobby), conectando o repositório Git.
 - Configure todas as variáveis de ambiente na Vercel e no Supabase.
-- Configure o domínio do Resend (ou use o domínio de teste do Resend no começo).
+- Configure as variáveis do SMTP (Gmail app password ou similar) para o disparo de e-mails.
 - Entregue um **README** com: setup local, variáveis necessárias, como rodar migrações, e o passo a passo de deploy.
 
 **Variáveis de ambiente esperadas (liste e explique cada uma):**
-`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `FOOTBALL_DATA_API_KEY`, `CRON_SECRET`.
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SMTP_USER`, `SMTP_PASS`, `FOOTBALL_DATA_API_KEY`, `CRON_SECRET`.
 
 ---
 

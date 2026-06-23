@@ -3,8 +3,10 @@ import { Header } from '@/components/shared/Header';
 import { Button } from '@/components/ui/Button';
 import { HomeClient } from '@/components/home/HomeClient';
 import Link from 'next/link';
+import Image from 'next/image';
 import styles from './page.module.css';
 import type { Metadata } from 'next';
+import logoImg from '../../public/logo.jpg';
 
 export const metadata: Metadata = {
   title: 'Bolão dos Gentes Boas — Palpite com seus amigos',
@@ -57,17 +59,20 @@ export default async function HomePage() {
               Aqui a disputa é com raça, e o título é sagrado.
             </p>
 
-            <div className={styles.heroCta}>
-              <Button size="lg" aria-label="Criar minha conta gratuitamente">
-                <Link href="/signup" style={{ color: 'inherit', textDecoration: 'none' }}>
-                  Criar conta
-                </Link>
-              </Button>
-              <Button variant="ghost" size="lg">
-                <Link href="/login" style={{ color: 'inherit', textDecoration: 'none' }}>
-                  Já tenho conta
-                </Link>
-              </Button>
+            <div style={{ marginTop: 'var(--space-8)', display: 'flex', justifyContent: 'center', position: 'relative', zIndex: 10 }}>
+              <Image 
+                src={logoImg} 
+                alt="Logo BolãoGB"
+                width={600}
+                height={400}
+                priority
+                style={{ 
+                  maxWidth: '100%', 
+                  height: 'auto',
+                  borderRadius: 'var(--radius-lg)',
+                  boxShadow: '0 8px 30px rgba(0, 0, 0, 0.4)'
+                }} 
+              />
             </div>
           </div>
 

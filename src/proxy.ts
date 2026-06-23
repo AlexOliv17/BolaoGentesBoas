@@ -46,11 +46,12 @@ export async function proxy(request: NextRequest) {
   const isAuthPage =
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
-    pathname.startsWith('/esqueci-senha');
+    pathname.startsWith('/forgot-password');
 
   const isPublicPage =
     isAuthPage ||
     pathname.startsWith('/join/') ||
+    pathname.startsWith('/api/auth/') ||
     pathname === '/';
 
   // Redireciona usuário não autenticado para login
