@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
     // para mostrar no front-end "Já são amigos", "Pedido enviado", etc.
     const profileIds = profiles?.map(p => p.id) || [];
     
-    let friendships = [];
+    let friendships: any[] = [];
     if (profileIds.length > 0) {
       const { data: rels } = await supabase
         .from('friendships')

@@ -10,6 +10,9 @@ export const metadata = {
   description: 'Gerencie seu perfil e avatar no BolãoGB',
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ProfilePage() {
   const supabase = await createSupabaseServerClient();
   
@@ -39,11 +42,9 @@ export default async function ProfilePage() {
 
   return (
     <div className={styles.container}>
-      <nav className={styles.navBar}>
-        <Link href="/dashboard" className={styles.backButton}>
-          <span aria-hidden="true">←</span> Voltar
-        </Link>
-      </nav>
+      <Link href="/dashboard" className={styles.backButton}>
+        ← Voltar ao Dashboard
+      </Link>
 
       <header className={styles.header}>
         <h1 className={styles.title}>Meu Perfil</h1>

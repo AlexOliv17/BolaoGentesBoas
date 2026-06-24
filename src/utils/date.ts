@@ -76,6 +76,33 @@ export function getTodayRangeInUTC(): { start: string; end: string } {
 }
 
 /**
+ * Retorna o início e o fim de um intervalo de datas em UTC,
+ * calculados com base no fuso America/Sao_Paulo.
+ * @param dateFrom Data no formato YYYY-MM-DD
+ * @param dateTo Data no formato YYYY-MM-DD
+ */
+export function getDateRangeInUTC(dateFrom: string, dateTo: string): { start: string; end: string } {
+  // dateFrom: YYYY-MM-DD (ex: 2026-06-23)
+  
+  // Meia noite de dateFrom em São Paulo (UTC-3)
+  // Em UTC, isso equivale a 03:00:00 do mesmo dia
+  const startUtc = `${dateFrom}T03:00:00Z`;
+
+  // Fim do dia dateTo em São Paulo (23:59:59 UTC-3)
+  // Em UTC, isso equivale a 02:59:59 do dia SEGUINTE.
+  // Vamos calcular o dia seguinte usando o objeto Date (em UTC para não ter conflito local)
+  const [tYear, tMonth, tDay] = dateTo.split('-').map(Number);
+  const nextDay = new Date(Date.UTC(tYear, tMonth - 1, tDay + 1));
+  const nextDayStr = nextDay.toISOString().split('T')[0];
+  const endUtc = `${nextDayStr}T02:59:59Z`;
+
+  return {
+    start: startUtc,
+    end: endUtc,
+  };
+}
+
+/**
  * Formata a contagem regressiva até o kickoff.
  *
  * @example formatCountdown('2026-06-15T19:30:00Z') → "1h 30min"
@@ -93,4 +120,21 @@ export function formatCountdown(kickoffAtUtc: string): string {
 
   if (hours > 0) return `${hours}h ${minutes}min`;
   return `${minutes}min`;
+}
+
+/**
+ * Retorna a data atual no fuso de São Paulo como string YYYY-MM-DD.
+ * Útil para filtros de API (football-data.org aceita esse formato).
+ */
+export function getTodayDateString(): string {
+  const nowInTz = toZonedTime(new Date(), TZ);
+  return format(nowInTz, 'yyyy-MM-dd', { timeZone: TZ });
+}
+
+/**
+ * Converte uma ISO date UTC para string YYYY-MM-DD no fuso de São Paulo.
+ */
+export function toDateString(utcIso: string): string {
+  const date = toZonedTime(new Date(utcIso), TZ);
+  return format(date, 'yyyy-MM-dd', { timeZone: TZ });
 }

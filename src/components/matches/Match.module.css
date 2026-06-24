@@ -1,0 +1,262 @@
+.matchCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: border-color var(--transition-fast);
+}
+
+.matchCard[data-status="live"] {
+  border-color: var(--color-warning);
+}
+
+.matchCard[data-status="finished"] {
+  opacity: 0.85;
+}
+
+/* ─── Cabeçalho do card (grupo + horário) ──────────── */
+.matchMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.matchStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.matchStatus[data-status="scheduled"] {
+  background-color: color-mix(in srgb, var(--color-text-muted) 15%, transparent);
+  color: var(--color-text-muted);
+}
+
+.matchStatus[data-status="live"] {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-text);
+  animation: pulse 2s infinite;
+}
+
+.matchStatus[data-status="finished"] {
+  background-color: color-mix(in srgb, var(--color-success) 15%, transparent);
+  color: var(--color-success-text);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* ─── Times e placar ───────────────────────────────── */
+.matchTeams {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.teamBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+}
+
+.teamCrest {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.teamName {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+.matchScore {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-extrabold);
+  color: var(--color-text);
+}
+
+.scoreSeparator {
+  color: var(--color-text-muted);
+  font-weight: var(--font-normal);
+}
+
+/* ─── Formulário de palpite ────────────────────────── */
+.predictionForm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.predictionLabel {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-bottom: var(--space-2);
+}
+
+.stepperContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stepperBtn {
+  background: transparent;
+  border: none;
+  color: var(--color-interactive);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stepperBtn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.scoreDisplay {
+  width: 56px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+  background-color: var(--color-bg);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  user-select: none;
+}
+
+.scoreInput:focus-visible {
+  border-color: var(--color-interactive);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-interactive) 25%, transparent);
+}
+
+.scoreInput:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.predictionX {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--color-text-muted);
+  font-weight: var(--font-bold);
+}
+
+/* ─── Estado do palpite (salvo, erro, carregando) ──── */
+.predictionFeedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  min-height: 24px;
+}
+
+.predictionFeedback[data-state="saved"] {
+  color: var(--color-success);
+}
+
+.predictionFeedback[data-state="saving"] {
+  color: var(--color-text-muted);
+}
+
+.predictionFeedback[data-state="error"] {
+  color: var(--color-error);
+}
+
+.predictionFeedback[data-state="locked"] {
+  color: var(--color-warning);
+}
+
+/* ─── Deadline ─────────────────────────────────────── */
+.deadlineText {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.deadlineText[data-urgent="true"] {
+  color: var(--color-warning);
+  font-weight: var(--font-semibold);
+}
+
+/* ─── Lista de jogos ───────────────────────────────── */
+.matchList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* ─── Pontuação no card (após apuração) ────────────── */
+.pointsBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  font-family: var(--font-display);
+}
+
+.pointsBadge[data-points="8"] {
+  background-color: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.pointsBadge[data-points="5"] {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.pointsBadge[data-points="0"] {
+  background-color: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .matchStatus[data-status="live"] {
+    animation: none;
+  }
+}

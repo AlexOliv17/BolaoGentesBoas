@@ -27,7 +27,7 @@ export async function PATCH(request: NextRequest) {
 
     // 4. Update no banco
     // A política RLS garante que o usuário só possa atualizar a própria linha.
-    const updateData: { nickname?: string; avatar_url?: string } = {};
+    const updateData: { nickname?: string; avatar_url?: string | null } = {};
     if (parsed.data.nickname !== undefined) updateData.nickname = parsed.data.nickname;
     if (parsed.data.avatar_url !== undefined) updateData.avatar_url = parsed.data.avatar_url;
 

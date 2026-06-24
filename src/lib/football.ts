@@ -1,61 +1,405 @@
 /**
- * football.ts — Interface trocável para fonte de dados de futebol.
+ * football.ts — Interface única para a fonte de dados de futebol.
  *
  * Toda chamada à API de futebol DEVE passar por footballDataSource.
  * Para trocar a fonte: implemente FootballDataSource em uma nova classe
  * e substitua o export no final deste arquivo.
  *
- * Card 6 implementará getTodaysMatches() e getMatchResult() com
- * cache no banco (tabela matches) e integração ao football-data.org.
+ * Fonte atual: football-data.org (API v4)
+ * Competição: WC (FIFA World Cup 2026)
+ * Rate limit: ~10 req/min (plano free)
  */
+
+import type {
+  FootballDataApiMatch,
+  FootballDataApiMatchesResponse,
+  FootballDataApiMatchStatus,
+} from '@/types/football-api.types';
+import { createClient } from '@supabase/supabase-js';
+import { getTodayDateString, getDateRangeInUTC } from '@/utils/date';
+
+// ─── Tipos públicos ────────────────────────────────────────────────────────────
 
 /** Representação interna de um jogo de futebol */
 export interface FootballMatch {
   id: number;
   homeTeam: string;
   awayTeam: string;
+  homeTeamCrest: string | null;
+  awayTeamCrest: string | null;
   kickoffAt: string; // ISO 8601 UTC
   status: 'scheduled' | 'live' | 'finished';
   homeScore: number | null;
   awayScore: number | null;
+  matchday: number | null;
+  groupName: string | null;
 }
 
 /** Contrato que toda fonte de dados de futebol deve implementar */
 export interface FootballDataSource {
   /** Retorna os jogos do dia atual (fuso America/Sao_Paulo) */
   getTodaysMatches(): Promise<FootballMatch[]>;
+  /** Retorna todos os jogos desde o início da Copa até hoje */
+  getHistoricalMatches(): Promise<FootballMatch[]>;
   /** Busca o resultado de um jogo específico pelo ID externo */
   getMatchResult(id: number): Promise<FootballMatch | null>;
+  /** Sincroniza jogos de um intervalo de datas com o banco */
+  syncMatches(dateFrom: string, dateTo: string): Promise<number>;
 }
 
-// ─── Implementação football-data.org (stub — Card 6 completa) ──────────────
+// ─── Constantes ────────────────────────────────────────────────────────────────
 
-class FootballDataOrg implements FootballDataSource {
-  private readonly baseUrl = 'https://api.football-data.org/v4';
+const COMPETITION_CODE = 'WC';
+const BASE_URL = 'https://api.football-data.org/v4';
+const CACHE_TTL_MS = 60 * 60 * 1000;       // 1 hora para jogos do dia
+const LIVE_CACHE_TTL_MS = 2 * 60 * 1000;    // 2 minutos para jogos ao vivo
 
-  private get headers(): Record<string, string> {
-    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
-    if (!apiKey) {
-      throw new Error('[football.ts] FOOTBALL_DATA_API_KEY não configurada.');
-    }
-    return { 'X-Auth-Token': apiKey };
+// ─── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Mapeia o status da API externa para o status interno do app */
+function mapApiStatus(apiStatus: FootballDataApiMatchStatus): 'scheduled' | 'live' | 'finished' {
+  switch (apiStatus) {
+    case 'SCHEDULED':
+    case 'TIMED':
+      return 'scheduled';
+    case 'IN_PLAY':
+    case 'PAUSED':
+      return 'live';
+    case 'FINISHED':
+    case 'AWARDED':
+      return 'finished';
+    case 'SUSPENDED':
+    case 'POSTPONED':
+    case 'CANCELLED':
+    default:
+      return 'scheduled';
+  }
+}
+
+/** Formata o nome do grupo: "GROUP_A" → "Grupo A" */
+function formatGroupName(group: string | null): string | null {
+  if (!group) return null;
+  const letter = group.replace('GROUP_', '');
+  return `Grupo ${letter}`;
+}
+
+/** Converte um jogo da API externa para o formato interno */
+function mapApiMatchToInternal(apiMatch: FootballDataApiMatch): FootballMatch {
+  return {
+    id: apiMatch.id,
+    homeTeam: apiMatch.homeTeam.shortName || apiMatch.homeTeam.name,
+    awayTeam: apiMatch.awayTeam.shortName || apiMatch.awayTeam.name,
+    homeTeamCrest: apiMatch.homeTeam.crest || null,
+    awayTeamCrest: apiMatch.awayTeam.crest || null,
+    kickoffAt: apiMatch.utcDate,
+    status: mapApiStatus(apiMatch.status),
+    homeScore: apiMatch.score.fullTime.home,
+    awayScore: apiMatch.score.fullTime.away,
+    matchday: apiMatch.matchday || null,
+    groupName: formatGroupName(apiMatch.group),
+  };
+}
+
+/** Cria o cliente Supabase para inserir/atualizar matches */
+function createMatchesClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !key) {
+    throw new Error('[football.ts] Variáveis SUPABASE_URL ou chave de acesso ausentes.');
   }
 
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
+
+// ─── Implementação football-data.org ───────────────────────────────────────────
+
+class FootballDataOrg implements FootballDataSource {
+  private get apiKey(): string {
+    const key = process.env.FOOTBALL_DATA_API_KEY;
+    if (!key) {
+      throw new Error('[football.ts] FOOTBALL_DATA_API_KEY não configurada.');
+    }
+    return key;
+  }
+
+  private get headers(): Record<string, string> {
+    return { 'X-Auth-Token': this.apiKey };
+  }
+
+  /**
+   * Busca jogos da API football-data.org para um intervalo de datas.
+   * Formato das datas: YYYY-MM-DD
+   */
+  private async fetchMatchesFromApi(dateFrom: string, dateTo: string): Promise<FootballDataApiMatch[]> {
+    const url = `${BASE_URL}/competitions/${COMPETITION_CODE}/matches?dateFrom=${dateFrom}&dateTo=${dateTo}`;
+
+    console.log(`[football.ts] Buscando jogos da API: ${dateFrom} a ${dateTo}`);
+
+    const response = await fetch(url, {
+      headers: this.headers,
+      next: { revalidate: 0 }, // Desabilita cache do Next.js neste fetch
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[football.ts] Erro na API (${response.status}):`, errorText);
+
+      // Se a competição não existe ainda (404), retornar vazio em vez de explodir
+      if (response.status === 404) {
+        console.warn('[football.ts] Competição WC não encontrada na API. A Copa pode não ter começado ainda.');
+        return [];
+      }
+
+      throw new Error(`Erro ao buscar jogos: ${response.status} - ${errorText}`);
+    }
+
+    const data: FootballDataApiMatchesResponse = await response.json();
+    console.log(`[football.ts] ${data.matches.length} jogos recebidos da API.`);
+
+    return data.matches;
+  }
+
+  /**
+   * Faz upsert dos jogos no banco de dados (INSERT ON CONFLICT UPDATE).
+   * Usa service_role para bypassar RLS.
+   */
+  private async upsertMatchesToDb(apiMatches: FootballDataApiMatch[]): Promise<number> {
+    if (apiMatches.length === 0) return 0;
+
+    const supabase = createMatchesClient();
+    const now = new Date().toISOString();
+
+    const rows = apiMatches.map((m) => ({
+      id: m.id,
+      home_team: m.homeTeam.shortName || m.homeTeam.name,
+      away_team: m.awayTeam.shortName || m.awayTeam.name,
+      kickoff_at: m.utcDate,
+      status: mapApiStatus(m.status),
+      home_score: m.score.fullTime.home,
+      away_score: m.score.fullTime.away,
+      matchday: m.matchday || null,
+      home_team_crest: m.homeTeam.crest || null,
+      away_team_crest: m.awayTeam.crest || null,
+      group_name: formatGroupName(m.group),
+      last_synced_at: now,
+    }));
+
+    const { error } = await supabase
+      .from('matches')
+      .upsert(rows, { onConflict: 'id' });
+
+    if (error) {
+      console.error('[football.ts] Erro no upsert:', error);
+      throw new Error(`Erro ao salvar jogos no banco: ${error.message}`);
+    }
+
+    console.log(`[football.ts] ${rows.length} jogos salvos/atualizados no banco.`);
+    return rows.length;
+  }
+
+  /**
+   * Busca jogos do banco que estão no cache (sem bater na API).
+   */
+  private async getMatchesFromDb(dateFrom: string, dateTo: string): Promise<FootballMatch[]> {
+    const supabase = createMatchesClient();
+
+    // dateFrom e dateTo são YYYY-MM-DD, precisamos converter para range UTC
+    // usando fuso local para incluir jogos que passam da meia-noite UTC mas ainda são do mesmo dia local
+    const { start: startUtc, end: endUtc } = getDateRangeInUTC(dateFrom, dateTo);
+
+    const { data, error } = await supabase
+      .from('matches')
+      .select('*')
+      .gte('kickoff_at', startUtc)
+      .lte('kickoff_at', endUtc)
+      .order('kickoff_at', { ascending: true });
+
+    if (error) {
+      console.error('[football.ts] Erro ao buscar do banco:', error);
+      return [];
+    }
+
+    if (!data || data.length === 0) return [];
+
+    return data.map((row) => {
+      let derivedStatus = row.status as 'scheduled' | 'live' | 'finished';
+      
+      // Força "live" se o jogo passou do horário e a API externa ainda não atualizou
+      if (derivedStatus === 'scheduled' && new Date(row.kickoff_at).getTime() <= Date.now()) {
+        derivedStatus = 'live';
+      }
+
+      return {
+        id: row.id,
+        homeTeam: row.home_team,
+        awayTeam: row.away_team,
+        homeTeamCrest: row.home_team_crest || null,
+        awayTeamCrest: row.away_team_crest || null,
+        kickoffAt: row.kickoff_at,
+        status: derivedStatus,
+        homeScore: row.home_score,
+        awayScore: row.away_score,
+        matchday: row.matchday || null,
+        groupName: row.group_name || null,
+      };
+    });
+  }
+
+  /**
+   * Verifica se o cache do banco está fresco o suficiente.
+   */
+  private async isCacheFresh(dateFrom: string, dateTo: string): Promise<boolean> {
+    const supabase = createMatchesClient();
+
+    const { start: startUtc, end: endUtc } = getDateRangeInUTC(dateFrom, dateTo);
+
+    const { data } = await supabase
+      .from('matches')
+      .select('status, last_synced_at, kickoff_at')
+      .gte('kickoff_at', startUtc)
+      .lte('kickoff_at', endUtc);
+
+    if (!data || data.length === 0) return false;
+
+    const now = Date.now();
+    let hasLiveMatches = false;
+
+    for (const match of data) {
+      if (match.status === 'live') {
+        hasLiveMatches = true;
+      }
+      // Se já passou do horário e não finalizou, deveria estar ao vivo
+      if (match.status === 'scheduled' && new Date(match.kickoff_at).getTime() <= now) {
+        hasLiveMatches = true;
+      }
+    }
+
+    const ttl = hasLiveMatches ? LIVE_CACHE_TTL_MS : CACHE_TTL_MS;
+
+    const oldestSync = Math.min(...data.map(m => new Date(m.last_synced_at || 0).getTime()));
+    const age = now - oldestSync;
+
+    return age < ttl;
+  }
+
+  // ─── Métodos públicos (implementam FootballDataSource) ─────────────────────
+
   async getTodaysMatches(): Promise<FootballMatch[]> {
-    // TODO (Card 6): implementar com cache no banco
-    // 1. Verificar tabela matches no Supabase (last_synced_at < 1h)
-    // 2. Se stale, buscar da API e atualizar o banco
-    // 3. Retornar do banco
-    console.warn('[football.ts] getTodaysMatches() ainda não implementado — Card 6.');
-    return [];
+    const today = getTodayDateString();
+
+    // 1. Verifica se o cache está fresco
+    const fresh = await this.isCacheFresh(today, today);
+
+    if (!fresh) {
+      // 2. Se stale, buscar da API (com margem de 1 dia para fuso UTC) e salvar no banco
+      try {
+        const todayDate = new Date();
+        
+        const yesterdayDate = new Date(todayDate);
+        yesterdayDate.setDate(todayDate.getDate() - 1);
+        const yesterdayStr = yesterdayDate.toISOString().split('T')[0];
+        
+        const tomorrowDate = new Date(todayDate);
+        tomorrowDate.setDate(todayDate.getDate() + 1);
+        const tomorrowStr = tomorrowDate.toISOString().split('T')[0];
+
+        const apiMatches = await this.fetchMatchesFromApi(yesterdayStr, tomorrowStr);
+        await this.upsertMatchesToDb(apiMatches);
+      } catch (error) {
+        console.error('[football.ts] Falha ao sincronizar, usando cache existente:', error);
+        // Continua e retorna o que tiver no banco (graceful degradation)
+      }
+    }
+
+    // 3. Sempre retornar do banco (fonte de verdade)
+    return this.getMatchesFromDb(today, today);
+  }
+
+  async getHistoricalMatches(): Promise<FootballMatch[]> {
+    const today = getTodayDateString();
+    // Data de início da Copa do Mundo de 2026
+    const startDate = '2026-06-11';
+    
+    // Retorna do banco todos os jogos entre o início da copa e hoje
+    return this.getMatchesFromDb(startDate, today);
   }
 
   async getMatchResult(id: number): Promise<FootballMatch | null> {
-    // TODO (Card 6): implementar com cache no banco
-    console.warn(`[football.ts] getMatchResult(${id}) ainda não implementado — Card 6.`);
-    return null;
+    const supabase = createMatchesClient();
+
+    // 1. Buscar do banco
+    const { data: row, error } = await supabase
+      .from('matches')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error || !row) return null;
+
+    // 2. Se não está finalizado e o cache está velho, buscar atualização
+    if (row.status !== 'finished') {
+      const lastSync = new Date(row.last_synced_at || 0).getTime();
+      const age = Date.now() - lastSync;
+
+      if (age > LIVE_CACHE_TTL_MS) {
+        try {
+          // Buscar só este jogo pela data dele
+          const dateStr = row.kickoff_at.split('T')[0];
+          const apiMatches = await this.fetchMatchesFromApi(dateStr, dateStr);
+          const match = apiMatches.find((m) => m.id === id);
+
+          if (match) {
+            await this.upsertMatchesToDb([match]);
+
+            // Retornar dados atualizados
+            return mapApiMatchToInternal(match);
+          }
+        } catch (error) {
+          console.error(`[football.ts] Falha ao atualizar jogo ${id}:`, error);
+        }
+      }
+    }
+
+    // 3. Retornar do banco
+    return {
+      id: row.id,
+      homeTeam: row.home_team,
+      awayTeam: row.away_team,
+      homeTeamCrest: row.home_team_crest || null,
+      awayTeamCrest: row.away_team_crest || null,
+      kickoffAt: row.kickoff_at,
+      status: row.status as 'scheduled' | 'live' | 'finished',
+      homeScore: row.home_score,
+      awayScore: row.away_score,
+      matchday: row.matchday || null,
+      groupName: row.group_name || null,
+    };
+  }
+
+  async syncMatches(dateFrom: string, dateTo: string): Promise<number> {
+    // Para garantir que não percamos jogos devido ao fuso horário (ex: jogos 23h SP -> 02h UTC do dia seguinte),
+    // vamos adicionar uma margem de segurança de 1 dia antes e 1 dia depois na requisição da API externa.
+    const fromDate = new Date(`${dateFrom}T12:00:00Z`);
+    fromDate.setDate(fromDate.getDate() - 1);
+    const paddedDateFrom = fromDate.toISOString().split('T')[0];
+
+    const toDate = new Date(`${dateTo}T12:00:00Z`);
+    toDate.setDate(toDate.getDate() + 1);
+    const paddedDateTo = toDate.toISOString().split('T')[0];
+
+    // 1. Buscar todos os jogos do intervalo na API
+    const apiMatches = await this.fetchMatchesFromApi(paddedDateFrom, paddedDateTo);
+
+    // 2. Salvar no banco (isso faz upsert de todos, que ficarão em cache)
+    const count = await this.upsertMatchesToDb(apiMatches);
+
+    return count;
   }
 }
 
 // Singleton exportado — troque a classe para mudar a fonte de dados
 export const footballDataSource: FootballDataSource = new FootballDataOrg();
+

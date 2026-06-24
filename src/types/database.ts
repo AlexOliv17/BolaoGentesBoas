@@ -95,6 +95,11 @@ export type Database = {
           id: number
           kickoff_at: string
           status: string
+          matchday: number | null
+          home_team_crest: string | null
+          away_team_crest: string | null
+          group_name: string | null
+          last_synced_at: string | null
         }
         Insert: {
           away_score?: number | null
@@ -105,6 +110,11 @@ export type Database = {
           id: number
           kickoff_at: string
           status?: string
+          matchday?: number | null
+          home_team_crest?: string | null
+          away_team_crest?: string | null
+          group_name?: string | null
+          last_synced_at?: string | null
         }
         Update: {
           away_score?: number | null
@@ -115,6 +125,11 @@ export type Database = {
           id?: number
           kickoff_at?: string
           status?: string
+          matchday?: number | null
+          home_team_crest?: string | null
+          away_team_crest?: string | null
+          group_name?: string | null
+          last_synced_at?: string | null
         }
         Relationships: []
       }
@@ -185,6 +200,55 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pool_invitations: {
+        Row: {
+          created_at: string
+          id: string
+          invitee_id: string
+          inviter_id: string
+          pool_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invitee_id: string
+          inviter_id: string
+          pool_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invitee_id?: string
+          inviter_id?: string
+          pool_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pool_invitations_invitee_id_fkey"
+            columns: ["invitee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pool_invitations_inviter_id_fkey"
+            columns: ["inviter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pool_invitations_pool_id_fkey"
+            columns: ["pool_id"]
+            isOneToOne: false
+            referencedRelation: "pools"
             referencedColumns: ["id"]
           },
         ]

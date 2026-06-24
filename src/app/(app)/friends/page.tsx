@@ -11,6 +11,9 @@ export const metadata: Metadata = {
   description: 'Gerencie seus amigos no BolãoGB',
 };
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function FriendsPage() {
   const supabase = await createSupabaseServerClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -35,21 +38,19 @@ export default async function FriendsPage() {
     console.error('Erro ao buscar amizades:', friendsError);
   }
 
-  const allFriendships = friendships || [];
+  const allFriendships: any[] = friendships || [];
 
   const friends = allFriendships.filter(f => f.status === 'accepted');
   const pendingReceived = allFriendships.filter(f => f.status === 'pending' && f.addressee.id === user.id);
   const pendingSent = allFriendships.filter(f => f.status === 'pending' && f.requester.id === user.id);
 
   return (
-    <div className="container" style={{ paddingTop: 'var(--space-4)', paddingBottom: 'var(--space-12)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div className="container" style={{ padding: 'var(--space-4)', paddingBottom: 'var(--space-12)', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       
-      <div style={{ width: '100%', maxWidth: '600px' }}>
-        <nav className={styles.navBar}>
-          <Link href="/dashboard" className={styles.backButton}>
-            <span aria-hidden="true">←</span> Voltar
-          </Link>
-        </nav>
+      <div style={{ width: '100%', maxWidth: '600px', marginBottom: 'var(--space-4)' }}>
+        <Link href="/dashboard" className={styles.backButton}>
+          ← Voltar ao Dashboard
+        </Link>
       </div>
 
       <div style={{ marginBottom: 'var(--space-8)', alignSelf: 'center' }}>
