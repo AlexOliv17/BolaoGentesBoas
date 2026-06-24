@@ -97,7 +97,7 @@ export default async function PoolDetailsPage({ params }: { params: Promise<{ id
           <p>O bolão que você tentou acessar não existe ou você não tem permissão para vê-lo.</p>
           <p style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>ID Procurado: {resolvedParams.id}</p>
           <Link href="/dashboard" style={{ marginTop: 'var(--space-4)', display: 'inline-block' }}>
-            <Button>Voltar ao Dashboard</Button>
+            <Button>Voltar</Button>
           </Link>
         </div>
       </div>
@@ -106,21 +106,23 @@ export default async function PoolDetailsPage({ params }: { params: Promise<{ id
 
   return (
     <div className={styles.container}>
-      <Link href="/dashboard" className={styles.backButton}>
-        ← Voltar ao Dashboard
-      </Link>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+        <Link href="/dashboard" className={styles.backButton} style={{ marginBottom: 0 }}>
+          ← Voltar
+        </Link>
+        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+          <InviteFriendsButton poolId={data.pool.id} />
+          {data.pool.my_role === 'admin' && (
+            <DeletePoolButton poolId={data.pool.id} poolName={data.pool.name} />
+          )}
+        </div>
+      </div>
       
       <div className={styles.header} style={{ alignItems: 'flex-start' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)', flex: 1 }}>
           <h1 className={styles.title}>{data.pool.name}</h1>
           {data.pool.description && (
             <p className={styles.subtitle}>{data.pool.description}</p>
-          )}
-        </div>
-        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
-          <InviteFriendsButton poolId={data.pool.id} />
-          {data.pool.my_role === 'admin' && (
-            <DeletePoolButton poolId={data.pool.id} poolName={data.pool.name} />
           )}
         </div>
       </div>

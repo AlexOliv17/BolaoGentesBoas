@@ -49,7 +49,7 @@ export default async function FriendsPage() {
       
       <div style={{ width: '100%', maxWidth: '600px', marginBottom: 'var(--space-4)' }}>
         <Link href="/dashboard" className={styles.backButton}>
-          ← Voltar ao Dashboard
+          ← Voltar
         </Link>
       </div>
 

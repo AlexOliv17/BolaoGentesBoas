@@ -48,7 +48,7 @@ export default function NewPoolPage() {
   return (
     <div className={styles.container}>
       <Link href="/dashboard" className={styles.backButton}>
-        ← Voltar ao Dashboard
+        ← Voltar
       </Link>
       
       <div className={styles.header}>

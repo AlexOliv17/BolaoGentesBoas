@@ -43,7 +43,7 @@ export default async function ProfilePage() {
   return (
     <div className={styles.container}>
       <Link href="/dashboard" className={styles.backButton}>
-        ← Voltar ao Dashboard
+        ← Voltar
       </Link>
 
       <header className={styles.header}>
