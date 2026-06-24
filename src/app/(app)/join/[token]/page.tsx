@@ -22,9 +22,11 @@ export default function JoinPoolPage({ params }: { params: Promise<{ token: stri
       
       let json;
       try {
-        json = await res.json();
+        const text = await res.text();
+        json = JSON.parse(text);
       } catch (e) {
-        throw new Error('Erro ao ler resposta do servidor');
+        setError(`Erro inesperado do servidor (${res.status}). Tente recarregar a página.`);
+        return;
       }
 
       if (res.status === 401 || json.error === 'Não autorizado') {
