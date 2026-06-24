@@ -114,14 +114,14 @@ export function HowItWorksModal({ forceOpen, onClose }: HowItWorksModalProps) {
                 <span className={`${styles.pts} ${styles.exact}`}>2</span>
                 <div>
                   <strong>Placar exato</strong>
-                  <p>Acertou o placar completo</p>
+                  <p>Acertou o placar completo (e os pênaltis, se houver)</p>
                 </div>
               </li>
               <li className={styles.scoringItem}>
                 <span className={`${styles.pts} ${styles.result}`}>1</span>
                 <div>
                   <strong>Resultado certo</strong>
-                  <p>Acertou vitória, derrota ou empate</p>
+                  <p>Acertou vitória, empate ou quem passa nos pênaltis</p>
                 </div>
               </li>
               <li className={styles.scoringItem}>

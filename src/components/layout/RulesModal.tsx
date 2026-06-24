@@ -43,21 +43,21 @@ export function RulesModal({ autoOpen = false }: { autoOpen?: boolean }) {
                   <span className={`${styles.pointValue} ${styles.gold}`}>2 pts</span>
                   <strong>Na Mosca (Placar Exato)</strong>
                   <p style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
-                    Acertou o vencedor e a quantidade exata de gols de cada time. (Ex: Palpitou 2x1, Terminou 2x1)
+                    Acertou a quantidade exata de gols de cada time. (Ex: Palpitou 2x1, Terminou 2x1). Em caso de empate no mata-mata, também precisa acertar quem vence nos pênaltis.
                   </p>
                 </div>
                 <div className={styles.ruleBox}>
                   <span className={styles.pointValue}>1 pt</span>
                   <strong>Acerto de Resultado</strong>
                   <p style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
-                    Acertou quem venceu ou acertou que daria empate, mas errou o placar exato. (Ex: Palpitou 1x0, Terminou 3x1)
+                    Acertou quem venceu ou quem passou nos pênaltis, mas errou o placar exato. (Ex: Palpitou 1x0, Terminou 3x1)
                   </p>
                 </div>
                 <div className={styles.ruleBox}>
                   <span className={styles.pointValue} style={{ background: 'var(--color-surface-hover)', color: 'var(--color-text-secondary)' }}>0 pts</span>
                   <strong>Errou feio</strong>
                   <p style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
-                    Errou o vencedor da partida.
+                    Errou o resultado final e o vencedor dos pênaltis.
                   </p>
                 </div>
               </div>
