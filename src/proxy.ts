@@ -77,7 +77,8 @@ export const config = {
      * Aplica o proxy a todas as rotas EXCETO:
      * - Arquivos estáticos do Next.js (_next/static, _next/image, favicon)
      * - Rotas de cron (protegidas por CRON_SECRET, não por sessão)
+     * - Arquivos do PWA (manifest, ícones, sw.js)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api/cron).*)',
+    '/((?!_next/static|_next/image|favicon.ico|api/cron|manifest.webmanifest|api/icon192|api/icon512|sw.js).*)',
   ],
 };
