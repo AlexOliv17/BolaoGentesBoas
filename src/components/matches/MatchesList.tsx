@@ -49,8 +49,8 @@ export function MatchesList({ poolId }: MatchesListProps) {
       try {
         // Busca jogos e palpites em paralelo
         const [matchesRes, predictionsRes] = await Promise.all([
-          fetch('/api/matches'),
-          fetch(`/api/predictions?poolId=${poolId}`),
+          fetch(`/api/matches?t=${Date.now()}`),
+          fetch(`/api/predictions?poolId=${poolId}&t=${Date.now()}`),
         ]);
 
         if (matchesRes.ok) {

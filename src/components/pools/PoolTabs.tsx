@@ -90,7 +90,7 @@ function RankingTab({ poolId }: { poolId: string }) {
   useEffect(() => {
     async function fetchRanking() {
       try {
-        const res = await fetch(`/api/pools/${poolId}/ranking`);
+        const res = await fetch(`/api/pools/${poolId}/ranking?t=${Date.now()}`);
         if (!res.ok) throw new Error('Falha ao carregar ranking');
         const data = await res.json();
         setRanking(data.data || []);

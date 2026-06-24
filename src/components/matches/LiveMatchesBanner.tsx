@@ -22,7 +22,7 @@ export function LiveMatchesBanner({ poolId }: LiveMatchesBannerProps) {
         
         // A API retorna os jogos de hoje. Mas precisamos garantir que busque todos os lives globais
         // Para simplificar e não refatorar a API inteira agora, chamaremos um endpoint novo
-        const liveRes = await fetch(`/api/matches/live?poolId=${poolId}`);
+        const liveRes = await fetch(`/api/matches/live?poolId=${poolId}&t=${Date.now()}`);
         if (liveRes.ok) {
           const liveData = await liveRes.json();
           setLiveMatches(liveData.data || []);
