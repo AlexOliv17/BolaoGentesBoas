@@ -108,9 +108,23 @@ export function MatchesList({ poolId }: MatchesListProps) {
     );
   }
 
+  // Filtra jogos ao vivo para não duplicar com o LiveMatchesBanner
+  const upcomingMatches = matches.filter(m => m.status !== 'live');
+
+  if (upcomingMatches.length === 0) {
+    return (
+      <div className={poolStyles.emptyState}>
+        <p>Nenhum jogo agendado para hoje.</p>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: 'var(--space-2)' }}>
+          Os jogos aparecerão aqui automaticamente.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <ul className={styles.matchList}>
-      {matches.map((match) => {
+      {upcomingMatches.map((match) => {
         const prediction = predictions.find((p) => p.match_id === match.id) || null;
 
         return (
