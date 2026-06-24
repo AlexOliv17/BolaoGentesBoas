@@ -76,10 +76,10 @@ export async function GET(request: Request) {
       if (!match || match.home_score === null || match.away_score === null) return;
 
       const points = calculatePoints(
-        match.home_score,
-        match.away_score,
         prediction.home_guess,
-        prediction.away_guess
+        prediction.away_guess,
+        match.home_score,
+        match.away_score
       );
 
       const { error: updateErr } = await supabase

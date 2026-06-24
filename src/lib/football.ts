@@ -266,21 +266,27 @@ class FootballDataOrg implements FootballDataSource {
 
     const now = Date.now();
     let hasLiveMatches = false;
+    let oldestSync = now;
 
     // Verificar se há ALGUM jogo ao vivo no sistema, mesmo de dias anteriores
     const { data: globalLive } = await supabase
       .from('matches')
-      .select('id')
-      .or(`status.eq.live,and(status.eq.scheduled,kickoff_at.lte.${new Date().toISOString()})`)
-      .limit(1);
+      .select('id, last_synced_at')
+      .or(`status.eq.live,and(status.eq.scheduled,kickoff_at.lte.${new Date().toISOString()})`);
       
     if (globalLive && globalLive.length > 0) {
       hasLiveMatches = true;
+      // Se há jogos ao vivo, a frescura do cache é baseada neles
+      oldestSync = Math.min(...globalLive.map(m => new Date(m.last_synced_at || 0).getTime()));
+    } else if (data && data.length > 0) {
+      // Se não há jogos ao vivo, a frescura é baseada nos jogos do período solicitado (hoje)
+      oldestSync = Math.min(...data.map(m => new Date(m.last_synced_at || 0).getTime()));
+    } else {
+      // Se não há jogos de forma alguma, força o sync
+      oldestSync = 0;
     }
 
     const ttl = hasLiveMatches ? LIVE_CACHE_TTL_MS : CACHE_TTL_MS;
-
-    const oldestSync = Math.min(...data.map(m => new Date(m.last_synced_at || 0).getTime()));
     const age = now - oldestSync;
 
     return age < ttl;
