@@ -2,13 +2,7 @@ import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
 
-export const size = {
-  width: 192,
-  height: 192,
-};
-export const contentType = 'image/png';
-
-export default function Icon() {
+export async function GET() {
   return new ImageResponse(
     (
       <div
@@ -29,6 +23,6 @@ export default function Icon() {
         GB
       </div>
     ),
-    { ...size }
+    { width: 192, height: 192 }
   );
 }
