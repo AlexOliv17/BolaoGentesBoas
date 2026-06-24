@@ -18,7 +18,7 @@ export default function Icon() {
       <div
         style={{
           fontSize: 20,
-          background: '#042A2B', // A cor verde escuro do projeto (var(--color-brand-green))
+          backgroundImage: 'linear-gradient(to bottom, #042A2B, #2e7d32)', // Degradê imitando campo de grama
           width: '100%',
           height: '100%',
           display: 'flex',
