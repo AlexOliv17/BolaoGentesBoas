@@ -43,21 +43,26 @@ async function getPoolDetails(id: string) {
 
   if (poolError || !poolData) return null;
 
-  const { data: membersData } = await supabase
+  const { data: membersData, error: membersDataErr } = await supabase
     .from('pool_members')
     .select(`
       user_id,
       role,
       joined_at,
-      profiles (
+      profile:profiles!user_id (
         id,
         full_name,
         avatar_url,
-        nickname
+        nickname,
+        username
       )
     `)
     .eq('pool_id', id)
     .order('joined_at', { ascending: true });
+
+  if (membersDataErr) {
+    console.error('[getPoolDetails] membersDataErr:', membersDataErr);
+  }
 
   return {
     pool: { ...(poolData as any), my_role: memberData.role },
