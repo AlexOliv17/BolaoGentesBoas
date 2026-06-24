@@ -6,10 +6,10 @@ create extension if not exists pg_cron;
 -- select cron.unschedule('process-scores');
 -- select cron.unschedule('send-reminders');
 
--- 3. Criar agendamento para processar pontos a cada 5 minutos
+-- 3. Criar agendamento para processar pontos a cada 1 minuto
 select cron.schedule(
   'process-scores', -- Nome do job
-  '*/5 * * * *',    -- Expressão Cron: a cada 5 minutos
+  '* * * * *',      -- Expressão Cron: a cada 1 minuto
   $$
     select net.http_get(
       url:='https://bolao-gentes-boas.vercel.app/api/cron/process-scores',
