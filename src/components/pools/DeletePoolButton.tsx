@@ -36,7 +36,7 @@ export function DeletePoolButton({ poolId, poolName }: { poolId: string, poolNam
         style={{ color: 'var(--color-error)', borderColor: 'var(--color-error)' }}
         onClick={() => setIsOpen(true)}
       >
-        Excluir Bolão
+        Excluir
       </Button>
 
       {isOpen && (

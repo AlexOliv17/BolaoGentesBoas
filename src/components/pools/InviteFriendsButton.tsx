@@ -10,9 +10,10 @@ export function InviteFriendsButton({ poolId }: { poolId: string }) {
   return (
     <>
       <Button 
+        size="sm"
         onClick={() => setIsModalOpen(true)}
       >
-        Convidar Amigos
+        Convidar
       </Button>
 
       {isModalOpen && (

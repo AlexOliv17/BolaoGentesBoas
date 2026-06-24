@@ -106,11 +106,11 @@ export default async function PoolDetailsPage({ params }: { params: Promise<{ id
 
   return (
     <div className={styles.container}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
         <Link href="/dashboard" className={styles.backButton} style={{ marginBottom: 0 }}>
           ← Voltar
         </Link>
-        <div style={{ display: 'flex', gap: 'var(--space-3)' }}>
+        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
           <InviteFriendsButton poolId={data.pool.id} />
           {data.pool.my_role === 'admin' && (
             <DeletePoolButton poolId={data.pool.id} poolName={data.pool.name} />
