@@ -5,8 +5,8 @@
  * Card 8 integrará calculatePoints() ao job de atualização de pontos.
  *
  * Regras:
- *   8 pts — placar exato (ex.: palpite 2×1, resultado 2×1)
- *   5 pts — acertou o resultado (vitória/empate) mas não o placar exato
+ *   2 pts — placar exato (ex.: palpite 2×1, resultado 2×1)
+ *   1 pts — acertou o resultado (vitória/empate) mas não o placar exato
  *   0 pts — errou o resultado
  */
 
@@ -32,13 +32,13 @@ export function getResult(homeGoals: number, awayGoals: number): MatchResult {
  * @param awayGuess  - Palpite: gols do visitante
  * @param homeScore  - Resultado real: gols do mandante
  * @param awayScore  - Resultado real: gols do visitante
- * @returns 8, 5 ou 0
+ * @returns 2, 1 ou 0
  *
  * @example
- * calculatePoints(2, 1, 2, 1) // → 8 (placar exato)
- * calculatePoints(2, 0, 3, 0) // → 5 (acertou vitória do mandante)
- * calculatePoints(1, 1, 2, 2) // → 5 (acertou empate)
- * calculatePoints(1, 0, 0, 1) // → 0 (errou o resultado)
+ * calculatePoints(2, 1, 2, 1) // → 2 (placar exato)
+ * calculatePoints(2, 0, 3, 0) // → 1 (acertou vitória do mandante)
+ * calculatePoints(1, 1, 2, 2) // → 1 (acertou empate)
+ * calculatePoints(1, 2, 2, 1) // → 0 (errou)
  */
 export function calculatePoints(
   homeGuess: number,
@@ -46,14 +46,15 @@ export function calculatePoints(
   homeScore: number,
   awayScore: number,
 ): number {
-  // Placar exato — 8 pontos
   if (homeGuess === homeScore && awayGuess === awayScore) {
-    return 8;
+    return 2;
   }
 
-  // Resultado correto (sem placar exato) — 5 pontos
-  if (getResult(homeGuess, awayGuess) === getResult(homeScore, awayScore)) {
-    return 5;
+  const guessResult = getResult(homeGuess, awayGuess);
+  const matchResult = getResult(homeScore, awayScore);
+
+  if (guessResult === matchResult) {
+    return 1;
   }
 
   // Errou o resultado — 0 pontos

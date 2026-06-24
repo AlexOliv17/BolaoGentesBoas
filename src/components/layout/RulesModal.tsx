@@ -40,14 +40,14 @@ export function RulesModal({ autoOpen = false }: { autoOpen?: boolean }) {
               <div className={styles.section}>
                 <h4 className={styles.sectionTitle}>⚽ Pontuação dos Jogos</h4>
                 <div className={styles.ruleBox}>
-                  <span className={`${styles.pointValue} ${styles.gold}`}>8 pts</span>
+                  <span className={`${styles.pointValue} ${styles.gold}`}>2 pts</span>
                   <strong>Na Mosca (Placar Exato)</strong>
                   <p style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
                     Acertou o vencedor e a quantidade exata de gols de cada time. (Ex: Palpitou 2x1, Terminou 2x1)
                   </p>
                 </div>
                 <div className={styles.ruleBox}>
-                  <span className={styles.pointValue}>5 pts</span>
+                  <span className={styles.pointValue}>1 pt</span>
                   <strong>Acerto de Resultado</strong>
                   <p style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
                     Acertou quem venceu ou acertou que daria empate, mas errou o placar exato. (Ex: Palpitou 1x0, Terminou 3x1)
