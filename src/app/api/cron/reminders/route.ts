@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
 
   const { data: matches, error: matchesErr } = await supabase
     .from('matches')
-    .select('id, homeTeam, awayTeam, kickoff_at')
+    .select('id, home_team, away_team, kickoff_at')
     .eq('status', 'scheduled')
     .gte('kickoff_at', minTime)
     .lte('kickoff_at', maxTime);
@@ -104,12 +104,12 @@ export async function GET(request: NextRequest) {
       
       if (!authUser || !authUser.email) continue;
 
-      const subject = `O jogo ${match.homeTeam} x ${match.awayTeam} vai começar!`;
+      const subject = `O jogo ${match.home_team} x ${match.away_team} vai começar!`;
       const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
           <h2 style="color: #ff7a00;">Bolão Gentes Boas</h2>
           <p>Olá <strong>${nickname}</strong>,</p>
-          <p>Faltam apenas 30 minutos para o apito inicial de <strong>${match.homeTeam} x ${match.awayTeam}</strong>!</p>
+          <p>Faltam apenas 30 minutos para o apito inicial de <strong>${match.home_team} x ${match.away_team}</strong>!</p>
           <p>Notamos que você ainda <strong>não fez ou esqueceu de fazer o seu palpite</strong> em um ou mais bolões que você participa.</p>
           <p>Corra e garanta seus pontos antes que o jogo seja travado!</p>
           <a href="${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard" style="display: inline-block; padding: 12px 24px; background: #ff7a00; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; margin-top: 16px;">Ir para o Bolão</a>
