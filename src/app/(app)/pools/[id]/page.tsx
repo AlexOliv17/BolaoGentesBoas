@@ -51,7 +51,6 @@ async function getPoolDetails(id: string) {
       joined_at,
       profile:profiles!user_id (
         id,
-        full_name,
         avatar_url,
         nickname,
         username
