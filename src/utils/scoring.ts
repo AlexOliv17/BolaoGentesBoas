@@ -32,21 +32,52 @@ export function getResult(homeGoals: number, awayGoals: number): MatchResult {
  * @param awayGuess  - Palpite: gols do visitante
  * @param homeScore  - Resultado real: gols do mandante
  * @param awayScore  - Resultado real: gols do visitante
+ * @param isKnockout - Se o jogo é de mata-mata
+ * @param penaltyWinnerGuess - Palpite de vencedor dos pênaltis ('home' | 'away' | null)
+ * @param actualPenaltyWinner - Vencedor real dos pênaltis ('home' | 'away' | null)
  * @returns 2, 1 ou 0
- *
- * @example
- * calculatePoints(2, 1, 2, 1) // → 2 (placar exato)
- * calculatePoints(2, 0, 3, 0) // → 1 (acertou vitória do mandante)
- * calculatePoints(1, 1, 2, 2) // → 1 (acertou empate)
- * calculatePoints(1, 2, 2, 1) // → 0 (errou)
  */
 export function calculatePoints(
   homeGuess: number,
   awayGuess: number,
   homeScore: number,
   awayScore: number,
+  isKnockout: boolean = false,
+  penaltyWinnerGuess: 'home' | 'away' | null = null,
+  actualPenaltyWinner: 'home' | 'away' | null = null,
 ): number {
-  if (homeGuess === homeScore && awayGuess === awayScore) {
+  const isExactScore = homeGuess === homeScore && awayGuess === awayScore;
+
+  if (isKnockout) {
+    let guessResult: MatchResult | string = getResult(homeGuess, awayGuess);
+    if (guessResult === 'draw' && penaltyWinnerGuess) {
+      guessResult = penaltyWinnerGuess;
+    }
+
+    let matchResult: MatchResult | string = getResult(homeScore, awayScore);
+    if (matchResult === 'draw' && actualPenaltyWinner) {
+      matchResult = actualPenaltyWinner;
+    }
+
+    if (isExactScore) {
+      if (homeScore === awayScore) {
+        if (penaltyWinnerGuess === actualPenaltyWinner) {
+          return 2;
+        }
+      } else {
+        return 2;
+      }
+    }
+
+    if (guessResult === matchResult) {
+      return 1;
+    }
+
+    return 0;
+  }
+
+  // Lógica original para fase de grupos
+  if (isExactScore) {
     return 2;
   }
 

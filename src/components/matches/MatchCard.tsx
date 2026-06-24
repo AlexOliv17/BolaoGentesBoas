@@ -17,11 +17,14 @@ interface MatchCardProps {
     awayScore: number | null;
     matchday: number | null;
     groupName: string | null;
+    stage?: string;
+    penaltyWinner?: 'home' | 'away' | null;
   };
   poolId: string;
   existingPrediction?: {
     home_guess: number;
     away_guess: number;
+    penalty_winner_guess?: 'home' | 'away' | null;
     points: number | null;
   } | null;
   readOnly?: boolean;
@@ -36,6 +39,9 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false 
   const [awayGuess, setAwayGuess] = useState<string>(
     existingPrediction?.away_guess?.toString() ?? ''
   );
+  const [penaltyWinnerGuess, setPenaltyWinnerGuess] = useState<'home' | 'away' | null>(
+    existingPrediction?.penalty_winner_guess ?? null
+  );
   const [feedback, setFeedback] = useState<FeedbackState>('idle');
   const [feedbackText, setFeedbackText] = useState('');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -43,11 +49,20 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false 
   const editable = !readOnly && match.status === 'scheduled' && isPredictionEditable(match.kickoffAt);
 
   // Auto-save com debounce
-  const savePrediction = useCallback(async (home: string, away: string) => {
+  const savePrediction = useCallback(async (home: string, away: string, penWinner: 'home' | 'away' | null) => {
     const homeNum = parseInt(home, 10);
     const awayNum = parseInt(away, 10);
 
     if (isNaN(homeNum) || isNaN(awayNum) || homeNum < 0 || awayNum < 0) return;
+
+    const isKnockout = match.stage && match.stage !== 'GROUP_STAGE';
+    const isDraw = homeNum === awayNum;
+
+    if (isKnockout && isDraw && !penWinner) {
+      // Esperando o usuário escolher o vencedor dos pênaltis
+      setFeedback('idle');
+      return;
+    }
 
     setFeedback('saving');
     setFeedbackText('Salvando...');
@@ -61,6 +76,7 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false 
           matchId: match.id,
           homeGuess: homeNum,
           awayGuess: awayNum,
+          penaltyWinnerGuess: penWinner,
         }),
       });
 
@@ -107,10 +123,24 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false 
     const newHome = side === 'home' ? valStr : homeGuess;
     const newAway = side === 'away' ? valStr : awayGuess;
 
+    let penWinner = penaltyWinnerGuess;
+    if (newHome !== newAway) {
+      penWinner = null;
+      setPenaltyWinnerGuess(null);
+    }
+
     if (newHome !== '' && newAway !== '') {
       saveTimerRef.current = setTimeout(() => {
-        savePrediction(newHome, newAway);
+        savePrediction(newHome, newAway, penWinner);
       }, 800);
+    }
+  }, [homeGuess, awayGuess, penaltyWinnerGuess, savePrediction, match.stage]);
+
+  const handlePenaltySelection = useCallback((winner: 'home' | 'away') => {
+    setPenaltyWinnerGuess(winner);
+    if (homeGuess !== '' && awayGuess !== '') {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      savePrediction(homeGuess, awayGuess, winner);
     }
   }, [homeGuess, awayGuess, savePrediction]);
 
@@ -201,6 +231,46 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false 
             {feedbackText && <span>{feedbackText}</span>}
           </div>
 
+          {match.stage && match.stage !== 'GROUP_STAGE' && homeGuess !== '' && awayGuess !== '' && homeGuess === awayGuess && (
+            <div style={{ marginTop: 'var(--space-3)', textAlign: 'center' }}>
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-warning)', fontWeight: 'bold', marginBottom: 'var(--space-2)' }}>
+                Vencedor nos Pênaltis:
+              </p>
+              <div style={{ display: 'flex', gap: 'var(--space-2)', justifyContent: 'center' }}>
+                <button
+                  type="button"
+                  onClick={() => handlePenaltySelection('home')}
+                  style={{
+                    padding: 'var(--space-2) var(--space-4)',
+                    borderRadius: 'var(--radius-full)',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: penaltyWinnerGuess === 'home' ? 'var(--color-brand-green)' : 'transparent',
+                    color: penaltyWinnerGuess === 'home' ? 'white' : 'var(--color-text)',
+                    fontWeight: penaltyWinnerGuess === 'home' ? 'bold' : 'normal',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {match.homeTeam}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePenaltySelection('away')}
+                  style={{
+                    padding: 'var(--space-2) var(--space-4)',
+                    borderRadius: 'var(--radius-full)',
+                    border: '1px solid var(--color-border)',
+                    backgroundColor: penaltyWinnerGuess === 'away' ? 'var(--color-brand-green)' : 'transparent',
+                    color: penaltyWinnerGuess === 'away' ? 'white' : 'var(--color-text)',
+                    fontWeight: penaltyWinnerGuess === 'away' ? 'bold' : 'normal',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {match.awayTeam}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Deadline */}
           <p className={styles.deadlineText}>
             ⏱ Fecha em {formatCountdown(match.kickoffAt)}
@@ -213,6 +283,11 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false 
             <>
               <p className={styles.predictionLabel}>
                 Seu palpite: {existingPrediction.home_guess} × {existingPrediction.away_guess}
+                {existingPrediction.home_guess === existingPrediction.away_guess && existingPrediction.penalty_winner_guess && (
+                  <span style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--color-warning)', marginTop: 4 }}>
+                    ({existingPrediction.penalty_winner_guess === 'home' ? match.homeTeam : match.awayTeam} vence nos pênaltis)
+                  </span>
+                )}
                 {match.status === 'scheduled' ? ' (travado)' : ''}
               </p>
               {existingPrediction.points !== null && existingPrediction.points !== undefined && (

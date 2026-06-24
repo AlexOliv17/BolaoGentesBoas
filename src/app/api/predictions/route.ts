@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { poolId, matchId, homeGuess, awayGuess } = parsed.data;
+    const { poolId, matchId, homeGuess, awayGuess, penaltyWinnerGuess } = parsed.data;
 
     // 3. Verificar se é membro do bolão
     const { data: memberData, error: memberError } = await supabase
@@ -50,15 +50,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Você não é membro deste bolão' }, { status: 403 });
     }
 
-    // 4. Verificar trava de horário (regra de negócio no servidor)
     const { data: matchData, error: matchError } = await supabase
       .from('matches')
-      .select('kickoff_at, status')
+      .select('kickoff_at, status, stage')
       .eq('id', matchId)
       .single();
 
     if (matchError || !matchData) {
       return NextResponse.json({ error: 'Jogo não encontrado' }, { status: 404 });
+    }
+
+    const isKnockout = matchData.stage !== 'GROUP_STAGE';
+    const isDraw = homeGuess === awayGuess;
+
+    if (isKnockout && isDraw && !penaltyWinnerGuess) {
+      return NextResponse.json({ error: 'É obrigatório selecionar o vencedor dos pênaltis em jogos de mata-mata que terminam empatados.' }, { status: 400 });
     }
 
     if (!isPredictionEditable(matchData.kickoff_at)) {
@@ -71,13 +77,13 @@ export async function POST(request: NextRequest) {
     // 5. Upsert do palpite (INSERT ON CONFLICT UPDATE)
     const { data: prediction, error: upsertError } = await supabase
       .from('predictions')
-      .upsert(
         {
           pool_id: poolId,
           user_id: user.id,
           match_id: matchId,
           home_guess: homeGuess,
           away_guess: awayGuess,
+          penalty_winner_guess: (isKnockout && isDraw) ? penaltyWinnerGuess : null,
         },
         { onConflict: 'pool_id,user_id,match_id' }
       )

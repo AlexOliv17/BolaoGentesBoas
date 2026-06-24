@@ -33,6 +33,8 @@ export interface FootballMatch {
   awayScore: number | null;
   matchday: number | null;
   groupName: string | null;
+  stage: string;
+  penaltyWinner: 'home' | 'away' | null;
 }
 
 /** Contrato que toda fonte de dados de futebol deve implementar */
@@ -85,6 +87,11 @@ function formatGroupName(group: string | null): string | null {
 
 /** Converte um jogo da API externa para o formato interno */
 function mapApiMatchToInternal(apiMatch: FootballDataApiMatch): FootballMatch {
+  let penaltyWinner: 'home' | 'away' | null = null;
+  if (apiMatch.score.duration === 'PENALTY_SHOOTOUT' && apiMatch.score.winner) {
+    penaltyWinner = apiMatch.score.winner === 'HOME_TEAM' ? 'home' : 'away';
+  }
+
   return {
     id: apiMatch.id,
     homeTeam: apiMatch.homeTeam.shortName || apiMatch.homeTeam.name,
@@ -97,6 +104,8 @@ function mapApiMatchToInternal(apiMatch: FootballDataApiMatch): FootballMatch {
     awayScore: apiMatch.score.fullTime.away,
     matchday: apiMatch.matchday || null,
     groupName: formatGroupName(apiMatch.group),
+    stage: apiMatch.stage || 'GROUP_STAGE',
+    penaltyWinner,
   };
 }
 
@@ -184,6 +193,10 @@ class FootballDataOrg implements FootballDataSource {
       home_team_crest: m.homeTeam.crest || null,
       away_team_crest: m.awayTeam.crest || null,
       group_name: formatGroupName(m.group),
+      stage: m.stage || 'GROUP_STAGE',
+      penalty_winner: m.score.duration === 'PENALTY_SHOOTOUT' && m.score.winner 
+        ? (m.score.winner === 'HOME_TEAM' ? 'home' : 'away') 
+        : null,
       last_synced_at: now,
     }));
 
@@ -244,6 +257,8 @@ class FootballDataOrg implements FootballDataSource {
         awayScore: row.away_score,
         matchday: row.matchday || null,
         groupName: row.group_name || null,
+        stage: row.stage || 'GROUP_STAGE',
+        penaltyWinner: row.penalty_winner || null,
       };
     });
   }
