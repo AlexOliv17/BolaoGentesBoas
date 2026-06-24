@@ -111,14 +111,14 @@ export function HowItWorksModal({ forceOpen, onClose }: HowItWorksModalProps) {
             <h3 className={styles.scoringTitle}>Pontuação</h3>
             <ul className={styles.scoringList} role="list">
               <li className={styles.scoringItem}>
-                <span className={`${styles.pts} ${styles.exact}`}>8</span>
+                <span className={`${styles.pts} ${styles.exact}`}>2</span>
                 <div>
                   <strong>Placar exato</strong>
                   <p>Acertou o placar completo</p>
                 </div>
               </li>
               <li className={styles.scoringItem}>
-                <span className={`${styles.pts} ${styles.result}`}>5</span>
+                <span className={`${styles.pts} ${styles.result}`}>1</span>
                 <div>
                   <strong>Resultado certo</strong>
                   <p>Acertou vitória, derrota ou empate</p>
