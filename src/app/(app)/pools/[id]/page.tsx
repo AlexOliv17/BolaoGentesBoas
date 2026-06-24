@@ -63,9 +63,25 @@ async function getPoolDetails(id: string) {
     console.error('[getPoolDetails] membersDataErr:', membersDataErr);
   }
 
+  // Busca as amizades do usuário atual
+  const { data: friendships } = await supabase
+    .from('friendships')
+    .select('requester_id, addressee_id, status')
+    .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
+
+  const friendshipStatusMap: Record<string, string> = {};
+  if (friendships) {
+    friendships.forEach((f) => {
+      const otherId = f.requester_id === user.id ? f.addressee_id : f.requester_id;
+      friendshipStatusMap[otherId] = f.status;
+    });
+  }
+
   return {
     pool: { ...(poolData as any), my_role: memberData.role },
-    members: membersData || []
+    members: membersData || [],
+    currentUserId: user.id,
+    friendshipStatusMap,
   };
 }
 
@@ -111,7 +127,12 @@ export default async function PoolDetailsPage({ params }: { params: Promise<{ id
 
       <LiveMatchesBanner poolId={data.pool.id} />
 
-      <PoolTabs pool={data.pool} members={data.members} />
+      <PoolTabs 
+        pool={data.pool} 
+        members={data.members} 
+        currentUserId={data.currentUserId}
+        friendshipStatusMap={data.friendshipStatusMap}
+      />
     </div>
   );
 }

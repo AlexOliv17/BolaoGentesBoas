@@ -11,9 +11,11 @@ import { HistoryList } from '@/components/matches/HistoryList';
 interface PoolTabsProps {
   pool: any;
   members: any[];
+  currentUserId?: string;
+  friendshipStatusMap?: Record<string, string>;
 }
 
-export function PoolTabs({ pool, members }: PoolTabsProps) {
+export function PoolTabs({ pool, members, currentUserId, friendshipStatusMap }: PoolTabsProps) {
   const [activeTab, setActiveTab] = useState<'history' | 'matches' | 'ranking' | 'members'>('matches');
 
   return (
@@ -71,7 +73,7 @@ export function PoolTabs({ pool, members }: PoolTabsProps) {
         {activeTab === 'history' && <HistoryList poolId={pool.id} />}
         {activeTab === 'matches' && <MatchesList poolId={pool.id} />}
         {activeTab === 'ranking' && <RankingTab poolId={pool.id} />}
-        {activeTab === 'members' && <MembersTab pool={pool} members={members} />}
+        {activeTab === 'members' && <MembersTab pool={pool} members={members} currentUserId={currentUserId} friendshipStatusMap={friendshipStatusMap} />}
       </div>
     </div>
   );
@@ -223,8 +225,30 @@ function RankingTab({ poolId }: { poolId: string }) {
   );
 }
 
-function MembersTab({ pool, members }: { pool: any, members: any[] }) {
+function MembersTab({ pool, members, currentUserId, friendshipStatusMap = {} }: { pool: any, members: any[], currentUserId?: string, friendshipStatusMap?: Record<string, string> }) {
   const [copied, setCopied] = useState(false);
+  const [loadingAdd, setLoadingAdd] = useState<string | null>(null);
+  const [localStatuses, setLocalStatuses] = useState<Record<string, string>>({});
+
+  const handleAddFriend = async (targetId: string) => {
+    setLoadingAdd(targetId);
+    try {
+      const res = await fetch('/api/friends/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ addressee_id: targetId })
+      });
+      
+      if (!res.ok) throw new Error('Falha ao adicionar');
+      
+      setLocalStatuses(prev => ({ ...prev, [targetId]: 'pending' }));
+    } catch (err) {
+      console.error(err);
+      alert('Erro ao enviar solicitação de amizade.');
+    } finally {
+      setLoadingAdd(null);
+    }
+  };
 
   const inviteUrl = typeof window !== 'undefined' 
     ? `${window.location.origin}/join/${pool.invite_token}` 
@@ -271,7 +295,7 @@ function MembersTab({ pool, members }: { pool: any, members: any[] }) {
         <h3 style={{ marginBottom: 'var(--space-3)' }}>Membros ({members.length})</h3>
         <ul className={styles.poolList}>
           {members.map((member) => (
-            <li key={member.id} className={styles.poolCard} style={{ flexDirection: 'row', alignItems: 'center', cursor: 'default' }}>
+            <li key={member.user_id} className={styles.poolCard} style={{ flexDirection: 'row', alignItems: 'center', cursor: 'default' }}>
               <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {member.profile.avatar_url ? (
                   <img src={member.profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -283,6 +307,30 @@ function MembersTab({ pool, members }: { pool: any, members: any[] }) {
                 <p style={{ fontWeight: 600 }}>{member.profile.nickname} {member.user_id === pool.owner_id && '👑'}</p>
                 <p style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>@{member.profile.username}</p>
               </div>
+
+              {currentUserId && member.user_id !== currentUserId && (
+                <div style={{ marginLeft: 'var(--space-3)' }}>
+                  {(localStatuses[member.user_id] || friendshipStatusMap[member.user_id]) === 'accepted' && (
+                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-brand-green)', fontWeight: 600, padding: '4px 8px', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-brand-green)', borderRadius: 'var(--radius-full)' }}>
+                      Amigo
+                    </span>
+                  )}
+                  {(localStatuses[member.user_id] || friendshipStatusMap[member.user_id]) === 'pending' && (
+                    <span style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-warning)', fontWeight: 600, padding: '4px 8px', backgroundColor: 'var(--color-surface)', border: '1px solid var(--color-warning)', borderRadius: 'var(--radius-full)' }}>
+                      Pendente
+                    </span>
+                  )}
+                  {!(localStatuses[member.user_id] || friendshipStatusMap[member.user_id]) && (
+                    <Button 
+                      onClick={() => handleAddFriend(member.user_id)}
+                      disabled={loadingAdd === member.user_id}
+                      style={{ padding: '6px 12px', fontSize: 'var(--font-size-xs)', minHeight: 'auto' }}
+                    >
+                      {loadingAdd === member.user_id ? 'Enviando...' : 'Adicionar'}
+                    </Button>
+                  )}
+                </div>
+              )}
             </li>
           ))}
         </ul>
