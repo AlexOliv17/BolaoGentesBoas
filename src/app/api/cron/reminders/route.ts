@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
 
   // 2. Buscar jogos que começam daqui a ~30 minutos
   const now = new Date();
-  const minTime = new Date(now.getTime() + 29 * 60000).toISOString();
-  const maxTime = new Date(now.getTime() + 31 * 60000).toISOString();
+  const minTime = new Date(now.getTime() + 20 * 60000).toISOString();
+  const maxTime = new Date(now.getTime() + 40 * 60000).toISOString();
 
   const { data: matches, error: matchesErr } = await supabase
     .from('matches')

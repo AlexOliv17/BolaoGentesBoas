@@ -18,10 +18,10 @@ select cron.schedule(
   $$
 );
 
--- 4. Criar agendamento para disparar e-mails de lembrete a cada 1 minuto
+-- 4. Criar agendamento para disparar e-mails de lembrete a cada 10 minutos
 select cron.schedule(
   'send-reminders', -- Nome do job
-  '* * * * *',      -- Expressão Cron: a cada 1 minuto
+  '*/10 * * * *',   -- Expressão Cron: a cada 10 minutos
   $$
     select net.http_get(
       url:='https://bolao-gentes-boas.vercel.app/api/cron/reminders',
