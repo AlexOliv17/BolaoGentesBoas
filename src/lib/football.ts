@@ -54,7 +54,7 @@ export interface FootballDataSource {
 const COMPETITION_CODE = 'WC';
 const BASE_URL = 'https://api.football-data.org/v4';
 const CACHE_TTL_MS = 60 * 60 * 1000;       // 1 hora para jogos do dia
-const LIVE_CACHE_TTL_MS = 2 * 60 * 1000;    // 2 minutos para jogos ao vivo
+const LIVE_CACHE_TTL_MS = 1 * 60 * 1000;    // 1 minuto para jogos ao vivo
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
