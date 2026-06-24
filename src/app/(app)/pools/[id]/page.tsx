@@ -48,7 +48,7 @@ async function getPoolDetails(id: string) {
     .select(`
       user_id,
       role,
-      joined_at,
+      created_at,
       profile:profiles!user_id (
         id,
         avatar_url,
@@ -57,7 +57,7 @@ async function getPoolDetails(id: string) {
       )
     `)
     .eq('pool_id', id)
-    .order('joined_at', { ascending: true });
+    .order('created_at', { ascending: true });
 
   if (membersDataErr) {
     console.error('[getPoolDetails] membersDataErr:', membersDataErr);

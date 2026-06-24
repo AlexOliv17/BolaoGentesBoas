@@ -21,10 +21,9 @@ async function run() {
     .select(`
       user_id,
       role,
-      joined_at,
+      created_at,
       profile:profiles!user_id (
         id,
-        full_name,
         avatar_url,
         nickname,
         username
