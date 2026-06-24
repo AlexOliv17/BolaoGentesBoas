@@ -20,17 +20,28 @@ export default function JoinPoolPage({ params }: { params: Promise<{ token: stri
         method: 'POST',
       });
       
-      const json = await res.json();
+      let json;
+      try {
+        json = await res.json();
+      } catch (e) {
+        throw new Error('Erro ao ler resposta do servidor');
+      }
+
+      if (res.status === 401 || json.error === 'Não autorizado') {
+        setError('Você precisa ter uma conta (fazer login) para entrar no bolão!');
+        return;
+      }
       
       if (!res.ok) {
-        setError(json.error || 'Erro ao entrar no bolão');
+        setError(json?.error || 'Erro ao entrar no bolão');
         return;
       }
       
       router.push(`/pools/${json.data.pool_id}`);
       router.refresh();
-    } catch {
-      setError('Erro de conexão');
+    } catch (err) {
+      console.error(err);
+      setError('Erro de conexão com o servidor. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -51,11 +62,11 @@ export default function JoinPoolPage({ params }: { params: Promise<{ token: stri
         )}
         
         <Button 
-          onClick={handleJoin} 
+          onClick={error?.includes('conta') ? () => router.push(`/login?redirect=/join/${resolvedParams.token}`) : handleJoin} 
           isLoading={loading} 
           style={{ width: '100%', marginBottom: 'var(--space-2)' }}
         >
-          Aceitar Convite e Entrar
+          {error?.includes('conta') ? 'Fazer Login ou Cadastro' : 'Aceitar Convite e Entrar'}
         </Button>
         
         <Button 
