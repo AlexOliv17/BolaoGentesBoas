@@ -181,7 +181,7 @@ O ranking ordena do maior para o menor, aplica o desempate, e é legível e toc�
 
 ---
 
-## 🟪 Card 10 — E-mail de lembrete (30 min antes)
+## 🟩 Card 10 — E-mail de lembrete (30 min antes) - [x] CONCLUÍDO
 **Depende de:** Cards 6 e 7
 
 **Feature**
@@ -198,7 +198,7 @@ Crio um jogo de teste começando em ~30 min: quem não palpitou recebe exatament
 
 ---
 
-## 🟫 Card 11 — Responsividade e acabamento mobile
+## 🟩 Card 11 — Responsividade e acabamento mobile - [x] CONCLUÍDO
 **Depende de:** transversal (revisar ao fim de cada card)
 
 **Feature**

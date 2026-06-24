@@ -267,14 +267,15 @@ class FootballDataOrg implements FootballDataSource {
     const now = Date.now();
     let hasLiveMatches = false;
 
-    for (const match of data) {
-      if (match.status === 'live') {
-        hasLiveMatches = true;
-      }
-      // Se já passou do horário e não finalizou, deveria estar ao vivo
-      if (match.status === 'scheduled' && new Date(match.kickoff_at).getTime() <= now) {
-        hasLiveMatches = true;
-      }
+    // Verificar se há ALGUM jogo ao vivo no sistema, mesmo de dias anteriores
+    const { data: globalLive } = await supabase
+      .from('matches')
+      .select('id')
+      .or(`status.eq.live,and(status.eq.scheduled,kickoff_at.lte.${new Date().toISOString()})`)
+      .limit(1);
+      
+    if (globalLive && globalLive.length > 0) {
+      hasLiveMatches = true;
     }
 
     const ttl = hasLiveMatches ? LIVE_CACHE_TTL_MS : CACHE_TTL_MS;
