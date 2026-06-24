@@ -120,23 +120,23 @@ function RankingTab({ poolId }: { poolId: string }) {
         let avatarBorder = 'none';
 
         if (position === 1) {
-          borderColor = 'var(--color-brand-gold)';
+          borderColor = '#FFD700'; // Ouro mais dourado e vibrante
           background = 'linear-gradient(145deg, rgba(255, 215, 0, 0.08) 0%, transparent 100%)';
-          badgeColor = 'var(--color-brand-gold)';
-          primaryColor = 'var(--color-brand-gold)';
-          avatarBorder = '2px solid var(--color-brand-gold)';
+          badgeColor = '#FFD700';
+          primaryColor = '#FFD700';
+          avatarBorder = '2px solid #FFD700';
         } else if (position === 2) {
-          borderColor = '#C0C0C0'; // Prata
-          background = 'linear-gradient(145deg, rgba(192, 192, 192, 0.08) 0%, transparent 100%)';
-          badgeColor = '#C0C0C0';
-          primaryColor = '#C0C0C0';
-          avatarBorder = '2px solid #C0C0C0';
+          borderColor = '#E2E8F0'; // Prata mais brilhante e claro
+          background = 'linear-gradient(145deg, rgba(226, 232, 240, 0.08) 0%, transparent 100%)';
+          badgeColor = '#E2E8F0';
+          primaryColor = '#E2E8F0';
+          avatarBorder = '2px solid #E2E8F0';
         } else if (position === 3) {
-          borderColor = '#CD7F32'; // Bronze
-          background = 'linear-gradient(145deg, rgba(205, 127, 50, 0.08) 0%, transparent 100%)';
-          badgeColor = '#CD7F32';
-          primaryColor = '#CD7F32';
-          avatarBorder = '2px solid #CD7F32';
+          borderColor = '#CD9B78'; // Bronze mais suave (menos "forte" e saturado)
+          background = 'linear-gradient(145deg, rgba(205, 155, 120, 0.08) 0%, transparent 100%)';
+          badgeColor = '#CD9B78';
+          primaryColor = '#CD9B78';
+          avatarBorder = '2px solid #CD9B78';
         }
 
         return (
