@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Oswald, Nunito } from 'next/font/google';
 import '@/styles/globals.css';
+import { PwaRegister } from '@/components/pwa/PwaRegister';
 
 /** Fonte de display — títulos, placares, números grandes */
 const oswald = Oswald({
@@ -26,6 +27,12 @@ export const metadata: Metadata = {
   description:
     'Dispute o bolão da Copa do Mundo 2026 com seus amigos. Palpite, pontue e suba no ranking!',
   robots: { index: false, follow: false }, // privado por enquanto
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Bolão GB',
+  },
 };
 
 export const viewport: Viewport = {
@@ -33,6 +40,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   // Impede zoom automático em inputs no iOS (complementa o font-size >=16px nos inputs)
   maximumScale: 5,
+  themeColor: '#042A2B',
 };
 
 export default function RootLayout({
@@ -49,6 +57,7 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Ir para o conteúdo principal
         </a>
+        <PwaRegister />
         {children}
       </body>
     </html>
