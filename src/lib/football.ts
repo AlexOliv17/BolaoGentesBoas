@@ -398,6 +398,8 @@ class FootballDataOrg implements FootballDataSource {
       awayScore: row.away_score,
       matchday: row.matchday || null,
       groupName: row.group_name || null,
+      stage: row.stage || 'GROUP_STAGE',
+      penaltyWinner: row.penalty_winner || null,
     };
   }
 
