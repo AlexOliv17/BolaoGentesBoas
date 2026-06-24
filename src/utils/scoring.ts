@@ -5,8 +5,8 @@
  * Card 8 integrará calculatePoints() ao job de atualização de pontos.
  *
  * Regras:
- *   2 pts — placar exato (ex.: palpite 2×1, resultado 2×1)
- *   1 pts — acertou o resultado (vitória/empate) mas não o placar exato
+ *   8 pts — placar exato (ex.: palpite 2×1, resultado 2×1)
+ *   5 pts — acertou o resultado (vitória/empate) mas não o placar exato
  *   0 pts — errou o resultado
  */
 
@@ -62,15 +62,15 @@ export function calculatePoints(
     if (isExactScore) {
       if (homeScore === awayScore) {
         if (penaltyWinnerGuess === actualPenaltyWinner) {
-          return 2;
+          return 8;
         }
       } else {
-        return 2;
+        return 8;
       }
     }
 
     if (guessResult === matchResult) {
-      return 1;
+      return 5;
     }
 
     return 0;
@@ -78,14 +78,14 @@ export function calculatePoints(
 
   // Lógica original para fase de grupos
   if (isExactScore) {
-    return 2;
+    return 8;
   }
 
   const guessResult = getResult(homeGuess, awayGuess);
   const matchResult = getResult(homeScore, awayScore);
 
   if (guessResult === matchResult) {
-    return 1;
+    return 5;
   }
 
   // Errou o resultado — 0 pontos

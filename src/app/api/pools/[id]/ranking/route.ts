@@ -44,9 +44,9 @@ export async function GET(
       
       stats[p.user_id].totalPoints += p.points || 0;
       
-      if (p.points === 8) {
+      if (p.points === 8 || p.points === 2) {
         stats[p.user_id].exactScores += 1;
-      } else if (p.points === 5) {
+      } else if (p.points === 5 || p.points === 1) {
         stats[p.user_id].correctResults += 1;
       }
     });

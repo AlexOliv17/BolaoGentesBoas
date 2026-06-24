@@ -209,12 +209,12 @@ function RankingTab({ poolId }: { poolId: string }) {
                 animation: 'slideDown 0.2s ease-out'
               }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-success)' }}>{user.exactScores}</div>
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Na Mosca (2 pts)</div>
+                  <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-success)' }}>{user.exactScores || 0}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Na Mosca (8 pts)</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-warning)' }}>{user.correctResults}</div>
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Acertos (1 pt)</div>
+                  <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-warning)' }}>{user.correctResults || 0}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Acertos (5 pts)</div>
                 </div>
               </div>
             )}
