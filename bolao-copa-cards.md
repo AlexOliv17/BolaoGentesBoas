@@ -2,7 +2,7 @@
 
 > Cada card é uma unidade de trabalho entregável. Implemente na ordem (respeitando "Depende de"), valide o **Resultado esperado** antes de seguir.
 >
-> **Stack:** Next.js (App Router, TS) na Vercel · Supabase (Postgres + Auth + Storage + pg_cron/pg_net) · Resend (e-mails) · football-data.org (horário/status/placar dos jogos).
+> **Stack:** Next.js (App Router, TS) na Vercel · Supabase (Postgres + Auth + Storage + pg_cron/pg_net) · E-mail via SMTP · football-data.org (horário/status/placar dos jogos).
 > **Regra transversal:** mobile-first (projetar a partir de ~360px); tudo em PT-BR; horários em UTC no banco, exibidos em America/Sao_Paulo; RLS ativo em todas as tabelas.
 
 ---
@@ -190,7 +190,7 @@ Avisar por e-mail quem ainda não palpitou um jogo prestes a começar.
 **Regras de negócio**
 - Agendamento via **pg_cron do Supabase** rodando a cada minuto (não usar o cron grátis da Vercel: roda 1x/dia e atrasa).
 - A cada minuto: selecionar jogos com `kickoff_at` entre `agora+29min` e `agora+31min` e `status = 'scheduled'`.
-- Para cada membro de cada bolão **sem palpite** naquele jogo e **sem registro** em `notifications_log` (`type='reminder_30min'`): enviar e-mail (Resend, via rota `/api/cron/reminders`) e gravar no log.
+- Para cada membro de cada bolão **sem palpite** naquele jogo e **sem registro** em `notifications_log` (`type='reminder_30min'`): enviar e-mail (via SMTP/Nodemailer na rota `/api/cron/reminders`) e gravar no log.
 - Idempotência obrigatória: no máximo **um** e-mail por jogo/usuário. Rota protegida por `CRON_SECRET`.
 
 **Resultado esperado**
@@ -223,9 +223,8 @@ Sistema no ar, gratuito.
 
 **Regras de negócio**
 - Supabase: subir banco + policies; ativar `pg_cron` e `pg_net`; agendar o lembrete e a sincronização diária.
-- Vercel (Hobby): deploy do Next.js conectado ao Git.
-- Configurar variáveis: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `FOOTBALL_DATA_API_KEY`, `CRON_SECRET`.
-- Configurar domínio do Resend (ou usar o domínio de teste no começo).
+- Configurar variáveis: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `FOOTBALL_DATA_API_KEY`, `CRON_SECRET`.
+- Configurar as credenciais do servidor SMTP fornecido para disparar os e-mails.
 - README com setup local, variáveis, migrações e passo a passo de deploy.
 
 **Resultado esperado**

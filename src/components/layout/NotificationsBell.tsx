@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import styles from './NotificationsBell.module.css';
+
 export function NotificationsBell() {
   const [invitations, setInvitations] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -50,24 +52,11 @@ export function NotificationsBell() {
   };
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div className={styles.container}>
       <button 
+        className={styles.bellButton}
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: 'var(--space-2)',
-          position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: 'var(--color-text-secondary)',
-          borderRadius: '50%',
-          transition: 'background-color var(--duration-fast)',
-        }}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--color-surface-hover)'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        aria-label="Notificações"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -75,22 +64,7 @@ export function NotificationsBell() {
         </svg>
 
         {invitations.length > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: '4px',
-            right: '4px',
-            backgroundColor: 'var(--color-danger)',
-            color: 'white',
-            fontSize: '10px',
-            fontWeight: 'bold',
-            minWidth: '16px',
-            height: '16px',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '0 4px',
-          }}>
+          <span className={styles.badge}>
             {invitations.length}
           </span>
         )}
@@ -98,75 +72,33 @@ export function NotificationsBell() {
 
       {isOpen && (
         <>
-          <div 
-            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }} 
-            onClick={() => setIsOpen(false)}
-          />
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            right: 0,
-            marginTop: 'var(--space-2)',
-            backgroundColor: 'var(--color-surface)',
-            border: '1px solid var(--color-border)',
-            borderRadius: 'var(--radius-lg)',
-            boxShadow: 'var(--shadow-xl)',
-            width: '320px',
-            maxHeight: '400px',
-            overflowY: 'auto',
-            zIndex: 999,
-          }}>
-            <div style={{
-              padding: 'var(--space-3)',
-              borderBottom: '1px solid var(--color-border)',
-              fontWeight: 'bold',
-              color: 'var(--color-text-primary)'
-            }}>
+          <div className={styles.overlay} onClick={() => setIsOpen(false)} />
+          <div className={styles.dropdown}>
+            <div className={styles.dropdownHeader}>
               Notificações
             </div>
             
             {invitations.length === 0 ? (
-              <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+              <div className={styles.emptyState}>
                 Nenhuma notificação no momento.
               </div>
             ) : (
-              <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              <ul className={styles.list}>
                 {invitations.map(inv => (
-                  <li key={inv.id} style={{
-                    padding: 'var(--space-3)',
-                    borderBottom: '1px solid var(--color-border)',
-                  }}>
-                    <p style={{ margin: '0 0 var(--space-2) 0', fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>
+                  <li key={inv.id} className={styles.listItem}>
+                    <p className={styles.message}>
                       <strong>{inv.inviter?.nickname || 'Alguém'}</strong> convidou você para o bolão <strong>{inv.pool?.name}</strong>.
                     </p>
-                    <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+                    <div className={styles.actions}>
                       <button 
+                        className={styles.btnAccept}
                         onClick={() => handleAction(inv.id, 'accept')}
-                        style={{
-                          flex: 1,
-                          backgroundColor: 'var(--color-primary)',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: 'var(--radius-sm)',
-                          padding: 'var(--space-2)',
-                          cursor: 'pointer',
-                          fontWeight: 'bold'
-                        }}
                       >
                         Aceitar
                       </button>
                       <button 
+                        className={styles.btnReject}
                         onClick={() => handleAction(inv.id, 'reject')}
-                        style={{
-                          flex: 1,
-                          backgroundColor: 'var(--color-surface-hover)',
-                          color: 'var(--color-text-primary)',
-                          border: 'none',
-                          borderRadius: 'var(--radius-sm)',
-                          padding: 'var(--space-2)',
-                          cursor: 'pointer',
-                          fontWeight: 'bold'
-                        }}
                       >
                         Recusar
                       </button>

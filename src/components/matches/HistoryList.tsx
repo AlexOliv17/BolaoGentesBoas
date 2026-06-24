@@ -205,6 +205,7 @@ export function HistoryList({ poolId }: HistoryListProps) {
                 match={match}
                 poolId={poolId}
                 existingPrediction={prediction}
+                readOnly={true}
               />
             </li>
           );

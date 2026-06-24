@@ -7,7 +7,7 @@ import styles from '@/components/pools/Pools.module.css';
 import { LogoutButton } from './LogoutButton';
 import { NotificationsBell } from '@/components/layout/NotificationsBell';
 
-import type { Database } from '@/types/database';
+import { RulesModal } from '@/components/layout/RulesModal';
 
 export const metadata: Metadata = {
   title: 'Dashboard | BolãoGB',
@@ -58,11 +58,11 @@ export default async function DashboardPage() {
 
   const { data } = await supabase
     .from('profiles')
-    .select('nickname')
+    .select('nickname, first_login')
     .eq('id', user.id)
     .single();
     
-  const profileData = data as { nickname: string } | null;
+  const profileData = data as { nickname: string, first_login: boolean } | null;
 
   const pools = await getMyPools(user.id);
 
@@ -75,6 +75,7 @@ export default async function DashboardPage() {
           </h1>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)', alignItems: 'center' }}>
+          <RulesModal autoOpen={profileData?.first_login} />
           <NotificationsBell />
           <Link href="/profile" style={{ textDecoration: 'none' }}>
             <Button variant="secondary" size="sm">Perfil</Button>

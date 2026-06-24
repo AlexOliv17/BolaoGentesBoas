@@ -24,11 +24,12 @@ interface MatchCardProps {
     away_guess: number;
     points: number | null;
   } | null;
+  readOnly?: boolean;
 }
 
 type FeedbackState = 'idle' | 'saving' | 'saved' | 'error' | 'locked';
 
-export function MatchCard({ match, poolId, existingPrediction }: MatchCardProps) {
+export function MatchCard({ match, poolId, existingPrediction, readOnly = false }: MatchCardProps) {
   const [homeGuess, setHomeGuess] = useState<string>(
     existingPrediction?.home_guess?.toString() ?? ''
   );
@@ -39,7 +40,7 @@ export function MatchCard({ match, poolId, existingPrediction }: MatchCardProps)
   const [feedbackText, setFeedbackText] = useState('');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const editable = match.status === 'scheduled' && isPredictionEditable(match.kickoffAt);
+  const editable = !readOnly && match.status === 'scheduled' && isPredictionEditable(match.kickoffAt);
 
   // Auto-save com debounce
   const savePrediction = useCallback(async (home: string, away: string) => {
@@ -147,9 +148,9 @@ export function MatchCard({ match, poolId, existingPrediction }: MatchCardProps)
         <div className={styles.matchScore}>
           {match.status !== 'scheduled' ? (
             <>
-              <span>{match.homeScore ?? '-'}</span>
+              <span>{match.homeScore ?? 0}</span>
               <span className={styles.scoreSeparator}>×</span>
-              <span>{match.awayScore ?? '-'}</span>
+              <span>{match.awayScore ?? 0}</span>
             </>
           ) : (
             <span className={styles.scoreSeparator} style={{ fontSize: 'var(--text-xl)' }}>vs</span>
@@ -165,22 +166,7 @@ export function MatchCard({ match, poolId, existingPrediction }: MatchCardProps)
       </div>
 
       {/* Palpite */}
-      {match.status === 'finished' && existingPrediction ? (
-        // Jogo encerrado: mostrar palpite e pontuação
-        <div style={{ textAlign: 'center' }}>
-          <p className={styles.predictionLabel}>
-            Seu palpite: {existingPrediction.home_guess} × {existingPrediction.away_guess}
-          </p>
-          {existingPrediction.points !== null && (
-            <span
-              className={styles.pointsBadge}
-              data-points={existingPrediction.points.toString()}
-            >
-              {existingPrediction.points} pts
-            </span>
-          )}
-        </div>
-      ) : editable ? (
+      {editable ? (
         // Jogo aberto: formulário de palpite
         <>
           <p className={styles.predictionLabel}>Seu palpite</p>
@@ -220,20 +206,31 @@ export function MatchCard({ match, poolId, existingPrediction }: MatchCardProps)
             ⏱ Fecha em {formatCountdown(match.kickoffAt)}
           </p>
         </>
-      ) : match.status === 'scheduled' ? (
-        // Palpite travado (não editável)
+      ) : (
+        // Palpite travado, ao vivo ou encerrado
         <div style={{ textAlign: 'center' }}>
           {existingPrediction ? (
-            <p className={styles.predictionLabel}>
-              Seu palpite: {existingPrediction.home_guess} × {existingPrediction.away_guess} (travado)
-            </p>
+            <>
+              <p className={styles.predictionLabel}>
+                Seu palpite: {existingPrediction.home_guess} × {existingPrediction.away_guess}
+                {match.status === 'scheduled' ? ' (travado)' : ''}
+              </p>
+              {existingPrediction.points !== null && existingPrediction.points !== undefined && (
+                <span
+                  className={styles.pointsBadge}
+                  data-points={existingPrediction.points.toString()}
+                >
+                  {existingPrediction.points} pts
+                </span>
+              )}
+            </>
           ) : (
             <div className={styles.predictionFeedback} data-state="locked">
-              🔒 Palpite encerrado
+              {match.status === 'scheduled' ? '🔒 Palpite encerrado' : 'Sem palpite registrado'}
             </div>
           )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 }

@@ -24,6 +24,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
+      const errorMsg = error.message.toLowerCase();
+      if (errorMsg.includes('email not confirmed')) {
+        return NextResponse.json({ error: 'O e-mail ainda não foi confirmado. Verifique sua caixa de entrada.' }, { status: 401 });
+      }
       return NextResponse.json({ error: 'E-mail ou senha incorretos' }, { status: 401 });
     }
 

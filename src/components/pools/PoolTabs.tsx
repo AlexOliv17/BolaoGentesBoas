@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Pools.module.css';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -70,7 +70,7 @@ export function PoolTabs({ pool, members }: PoolTabsProps) {
       <div className={styles.tabContent}>
         {activeTab === 'history' && <HistoryList poolId={pool.id} />}
         {activeTab === 'matches' && <MatchesList poolId={pool.id} />}
-        {activeTab === 'ranking' && <RankingTab />}
+        {activeTab === 'ranking' && <RankingTab poolId={pool.id} />}
         {activeTab === 'members' && <MembersTab pool={pool} members={members} />}
       </div>
     </div>
@@ -79,10 +79,146 @@ export function PoolTabs({ pool, members }: PoolTabsProps) {
 
 // MatchesTab agora é o componente MatchesList importado acima
 
-function RankingTab() {
+function RankingTab({ poolId }: { poolId: string }) {
+  const [ranking, setRanking] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchRanking() {
+      try {
+        const res = await fetch(`/api/pools/${poolId}/ranking`);
+        if (!res.ok) throw new Error('Falha ao carregar ranking');
+        const data = await res.json();
+        setRanking(data.data || []);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRanking();
+  }, [poolId]);
+
+  if (loading) return <div className={styles.emptyState}><p>Carregando ranking...</p></div>;
+  if (error) return <div className={styles.emptyState}><p style={{ color: 'var(--color-error)' }}>{error}</p></div>;
+  if (ranking.length === 0) return <div className={styles.emptyState}><p>Nenhum membro pontuou ainda.</p></div>;
+
   return (
-    <div className={styles.emptyState}>
-      <p>Em breve: Ranking dos membros do bolão.</p>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+      {ranking.map((user, index) => {
+        const position = user.position || index + 1;
+        const isExpanded = expandedId === user.user_id;
+
+        let borderColor = 'var(--color-border)';
+        let background = 'var(--color-surface)';
+        let badgeColor = 'var(--color-text-muted)';
+        let primaryColor = 'var(--color-text-primary)';
+        let avatarBorder = 'none';
+
+        if (position === 1) {
+          borderColor = 'var(--color-brand-gold)';
+          background = 'linear-gradient(145deg, rgba(255, 215, 0, 0.08) 0%, transparent 100%)';
+          badgeColor = 'var(--color-brand-gold)';
+          primaryColor = 'var(--color-brand-gold)';
+          avatarBorder = '2px solid var(--color-brand-gold)';
+        } else if (position === 2) {
+          borderColor = '#C0C0C0'; // Prata
+          background = 'linear-gradient(145deg, rgba(192, 192, 192, 0.08) 0%, transparent 100%)';
+          badgeColor = '#C0C0C0';
+          primaryColor = '#C0C0C0';
+          avatarBorder = '2px solid #C0C0C0';
+        } else if (position === 3) {
+          borderColor = '#CD7F32'; // Bronze
+          background = 'linear-gradient(145deg, rgba(205, 127, 50, 0.08) 0%, transparent 100%)';
+          badgeColor = '#CD7F32';
+          primaryColor = '#CD7F32';
+          avatarBorder = '2px solid #CD7F32';
+        }
+
+        return (
+          <div 
+            key={user.user_id} 
+            className={styles.poolCard}
+            style={{ 
+              cursor: 'pointer', 
+              transition: 'all 0.2s ease',
+              border: `1px solid ${borderColor}`,
+              background: background,
+            }}
+            onClick={() => setExpandedId(isExpanded ? null : user.user_id)}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-4)' }}>
+              {/* Posição */}
+              <div style={{ 
+                width: 32, 
+                fontWeight: 800, 
+                fontSize: position <= 3 ? 'var(--text-xl)' : 'var(--text-lg)', 
+                color: badgeColor,
+                textAlign: 'center'
+              }}>
+                {position}º
+              </div>
+
+              {/* Avatar */}
+              <div style={{ 
+                width: 48, height: 48, borderRadius: '50%', backgroundColor: 'var(--color-surface-hover)', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                border: avatarBorder
+              }}>
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span style={{ fontWeight: 'bold' }}>{user.nickname.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+
+              {/* Info principal */}
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: 700, fontSize: 'var(--text-md)', color: primaryColor }}>
+                  {user.nickname}
+                </p>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>@{user.username}</p>
+              </div>
+
+              {/* Pontos Totais */}
+              <div style={{ textAlign: 'right' }}>
+                <span style={{ 
+                  fontFamily: 'var(--font-display)', 
+                  fontWeight: 800, 
+                  fontSize: 'var(--text-xl)', 
+                  color: primaryColor 
+                }}>
+                  {user.totalPoints}
+                </span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', display: 'block' }}>pts</span>
+              </div>
+            </div>
+
+            {/* Detalhes Expandidos */}
+            {isExpanded && (
+              <div style={{ 
+                marginTop: 'var(--space-4)', 
+                paddingTop: 'var(--space-4)', 
+                borderTop: '1px dashed var(--color-border)',
+                display: 'flex',
+                justifyContent: 'space-around',
+                animation: 'slideDown 0.2s ease-out'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-success)' }}>{user.exactScores}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Na Mosca (8 pts)</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 'var(--text-lg)', fontWeight: 700, color: 'var(--color-warning)' }}>{user.correctResults}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Acertos (5 pts)</div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -7,6 +7,8 @@ import styles from '@/components/pools/Pools.module.css';
 import { PoolTabs } from '@/components/pools/PoolTabs';
 import { DeletePoolButton } from '@/components/pools/DeletePoolButton';
 import { InviteFriendsButton } from '@/components/pools/InviteFriendsButton';
+import { MatchCard } from '@/components/matches/MatchCard';
+import matchesStyles from '@/components/matches/Match.module.css';
 
 export const metadata: Metadata = {
   title: 'Bolão',
@@ -65,6 +67,47 @@ async function getPoolDetails(id: string) {
   };
 }
 
+async function getLiveMatches(poolId: string, userId: string) {
+  const supabase = await createSupabaseServerClient();
+  
+  // Buscar jogos ao vivo ou que já passaram do horário mas ainda não finalizaram (fallback)
+  const nowUtc = new Date().toISOString();
+  
+  const { data: matches } = await supabase
+    .from('matches')
+    .select('*')
+    .or(`status.eq.live,and(status.eq.scheduled,kickoff_at.lte.${nowUtc})`);
+
+  if (!matches || matches.length === 0) return [];
+
+  // Mapear para o formato que o MatchCard espera
+  const mappedMatches = matches.map(row => ({
+    id: row.id,
+    homeTeam: row.home_team,
+    awayTeam: row.away_team,
+    homeTeamCrest: row.home_team_crest || null,
+    awayTeamCrest: row.away_team_crest || null,
+    kickoffAt: row.kickoff_at,
+    status: row.status === 'scheduled' && new Date(row.kickoff_at).getTime() <= Date.now() ? 'live' : row.status as 'scheduled' | 'live' | 'finished',
+    homeScore: row.home_score,
+    awayScore: row.away_score,
+    matchday: row.matchday || null,
+    groupName: row.group_name || null,
+  }));
+
+  const { data: predictions } = await supabase
+    .from('predictions')
+    .select('*')
+    .eq('pool_id', poolId)
+    .eq('user_id', userId)
+    .in('match_id', matches.map(m => m.id));
+
+  return mappedMatches.map(match => ({
+    match,
+    prediction: predictions?.find(p => p.match_id === match.id) || null
+  }));
+}
+
 export default async function PoolDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
   const data = await getPoolDetails(resolvedParams.id);
@@ -83,6 +126,11 @@ export default async function PoolDetailsPage({ params }: { params: Promise<{ id
       </div>
     );
   }
+
+  // Precisamos do ID do usuário logado para carregar as predições dos jogos ao vivo
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const liveMatches = user ? await getLiveMatches(data.pool.id, user.id) : [];
 
   return (
     <div className={styles.container}>
@@ -104,6 +152,42 @@ export default async function PoolDetailsPage({ params }: { params: Promise<{ id
           )}
         </div>
       </div>
+
+      {liveMatches.length > 0 && (
+        <div style={{ marginBottom: 'var(--space-6)' }}>
+          <h2 style={{ 
+            fontSize: 'var(--text-lg)', 
+            color: 'var(--color-danger)', 
+            marginBottom: 'var(--space-4)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px' 
+          }}>
+            <span style={{
+              display: 'inline-block',
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--color-danger)',
+              boxShadow: '0 0 10px var(--color-danger)',
+              animation: 'pulse 1.5s infinite'
+            }}></span>
+            Ao Vivo Agora
+          </h2>
+          <ul className={matchesStyles.matchList}>
+            {liveMatches.map(({ match, prediction }) => (
+              <li key={match.id}>
+                <MatchCard 
+                  match={match} 
+                  poolId={data.pool.id} 
+                  existingPrediction={prediction} 
+                  readOnly={true} 
+                />
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <PoolTabs pool={data.pool} members={data.members} />
     </div>

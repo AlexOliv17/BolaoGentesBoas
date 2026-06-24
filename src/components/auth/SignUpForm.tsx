@@ -35,13 +35,21 @@ export function SignUpForm() {
 
       if (!response.ok) {
         const { error } = result;
+        const errorLower = error.toLowerCase();
         
-        // Mapear erros de unique constraint para os campos
-        if (error.toLowerCase().includes('username') || error.toLowerCase().includes('já existe')) {
+        // Mapear erros conhecidos do Supabase e do banco
+        if (errorLower.includes('username') || errorLower.includes('já existe') || errorLower.includes('violates unique constraint "profiles_username_key"')) {
             setError('username', { message: 'Este nome de usuário já está em uso' });
-        } else if (error.toLowerCase().includes('email') || error.toLowerCase().includes('e-mail')) {
-            setError('email', { message: 'Este e-mail já está em uso' });
+        } else if (errorLower.includes('user already registered')) {
+            setError('email', { message: 'Este e-mail já está cadastrado' });
+        } else if (errorLower.includes('email rate limit exceeded')) {
+            setError('root', { message: 'Muitas tentativas de envio de e-mail. Tente novamente mais tarde.' });
+        } else if (errorLower.includes('email signups are disabled')) {
+            setError('root', { message: 'O cadastro por e-mail está desativado no servidor.' });
+        } else if (errorLower.includes('database error saving new user')) {
+            setError('username', { message: 'Nome de usuário já em uso ou erro no banco de dados.' });
         } else {
+            // Se for um erro contendo "email" mas não os acima, exibe no root
             setError('root', { message: error || 'Erro ao criar conta' });
         }
         return;
