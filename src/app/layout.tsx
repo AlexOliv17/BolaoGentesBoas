@@ -28,6 +28,10 @@ export const metadata: Metadata = {
     'Dispute o bolão da Copa do Mundo 2026 com seus amigos. Palpite, pontue e suba no ranking!',
   robots: { index: false, follow: false }, // privado por enquanto
   manifest: '/manifest.webmanifest',
+  icons: {
+    icon: '/api/icon192',
+    apple: '/api/icon192',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
