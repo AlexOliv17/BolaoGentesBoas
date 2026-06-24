@@ -77,6 +77,7 @@ export async function POST(request: NextRequest) {
     // 5. Upsert do palpite (INSERT ON CONFLICT UPDATE)
     const { data: prediction, error: upsertError } = await supabase
       .from('predictions')
+      .upsert(
         {
           pool_id: poolId,
           user_id: user.id,
