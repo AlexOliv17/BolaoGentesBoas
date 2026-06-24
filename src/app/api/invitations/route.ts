@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 /**
  * GET /api/invitations
  * 
- * Retorna todos os convites pendentes recebidos pelo usuário logado.
+ * Retorna todos os convites pendentes recebidos pelo usuário logado (bolão e amizade).
  */
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
 
     if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
-    const { data, error } = await supabase
+    const { data: poolData, error: poolError } = await supabase
       .from('pool_invitations')
       .select(`
         id,
@@ -24,12 +24,29 @@ export async function GET() {
         inviter:profiles!pool_invitations_inviter_id_fkey(nickname, avatar_url)
       `)
       .eq('invitee_id', user.id)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+      .eq('status', 'pending');
 
-    if (error) throw error;
+    if (poolError) throw poolError;
 
-    return NextResponse.json({ data });
+    const { data: friendData, error: friendError } = await supabase
+      .from('friendships')
+      .select(`
+        id,
+        status,
+        created_at,
+        requester:profiles!friendships_requester_id_fkey(nickname, avatar_url)
+      `)
+      .eq('addressee_id', user.id)
+      .eq('status', 'pending');
+
+    if (friendError) throw friendError;
+
+    const notifications = [
+      ...(poolData || []).map(p => ({ ...p, type: 'pool' })),
+      ...(friendData || []).map(f => ({ ...f, type: 'friend', inviter: f.requester }))
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    return NextResponse.json({ data: notifications });
   } catch (error: any) {
     console.error('[GET /api/invitations] Erro:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -40,7 +57,7 @@ export async function GET() {
  * PATCH /api/invitations
  * 
  * Aceita ou recusa um convite.
- * Body: { invitationId: string, action: 'accept' | 'reject' }
+ * Body: { invitationId: string, action: 'accept' | 'reject', type?: 'pool' | 'friend' }
  */
 export async function PATCH(request: NextRequest) {
   try {
@@ -49,12 +66,32 @@ export async function PATCH(request: NextRequest) {
 
     if (!user) return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
 
-    const { invitationId, action } = await request.json();
+    const { invitationId, action, type = 'pool' } = await request.json();
 
     if (!invitationId || !['accept', 'reject'].includes(action)) {
       return NextResponse.json({ error: 'Dados inválidos' }, { status: 400 });
     }
 
+    const newStatus = action === 'accept' ? 'accepted' : 'rejected';
+
+    if (type === 'friend') {
+      const { data: friendship, error: getErr } = await supabase
+        .from('friendships')
+        .select('id, status')
+        .eq('id', invitationId)
+        .eq('addressee_id', user.id)
+        .single();
+      
+      if (getErr || !friendship) return NextResponse.json({ error: 'Convite não encontrado' }, { status: 404 });
+      if (friendship.status !== 'pending') return NextResponse.json({ error: 'Convite já processado' }, { status: 400 });
+
+      const { error: updErr } = await supabase.from('friendships').update({ status: newStatus }).eq('id', invitationId);
+      if (updErr) throw updErr;
+
+      return NextResponse.json({ success: true, status: newStatus });
+    }
+
+    // Lógica para bolão (type === 'pool')
     // 1. Busca o convite para validar se pertence ao usuário
     const { data: invitation, error: getErr } = await supabase
       .from('pool_invitations')
@@ -72,7 +109,6 @@ export async function PATCH(request: NextRequest) {
     }
 
     // 2. Atualiza o status do convite
-    const newStatus = action === 'accept' ? 'accepted' : 'rejected';
     const { error: updErr } = await supabase
       .from('pool_invitations')
       .update({ status: newStatus })

@@ -32,12 +32,12 @@ export function NotificationsBell() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleAction = async (invitationId: string, action: 'accept' | 'reject') => {
+  const handleAction = async (invitationId: string, action: 'accept' | 'reject', type: 'pool' | 'friend' = 'pool') => {
     try {
       const res = await fetch('/api/invitations', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ invitationId, action }),
+        body: JSON.stringify({ invitationId, action, type }),
       });
 
       if (res.ok) {
@@ -87,18 +87,22 @@ export function NotificationsBell() {
                 {invitations.map(inv => (
                   <li key={inv.id} className={styles.listItem}>
                     <p className={styles.message}>
-                      <strong>{inv.inviter?.nickname || 'Alguém'}</strong> convidou você para o bolão <strong>{inv.pool?.name}</strong>.
+                      {inv.type === 'friend' ? (
+                        <><strong>{inv.inviter?.nickname || 'Alguém'}</strong> enviou um pedido de amizade.</>
+                      ) : (
+                        <><strong>{inv.inviter?.nickname || 'Alguém'}</strong> convidou você para o bolão <strong>{inv.pool?.name}</strong>.</>
+                      )}
                     </p>
                     <div className={styles.actions}>
                       <button 
                         className={styles.btnAccept}
-                        onClick={() => handleAction(inv.id, 'accept')}
+                        onClick={() => handleAction(inv.id, 'accept', inv.type)}
                       >
                         Aceitar
                       </button>
                       <button 
                         className={styles.btnReject}
-                        onClick={() => handleAction(inv.id, 'reject')}
+                        onClick={() => handleAction(inv.id, 'reject', inv.type)}
                       >
                         Recusar
                       </button>
