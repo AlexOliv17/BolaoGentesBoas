@@ -2,11 +2,15 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { MatchCard } from '@/components/matches/MatchCard';
+import { MemberSelectModal } from '@/components/pools/MemberSelectModal';
+import { Button } from '@/components/ui/Button';
 import styles from '@/components/matches/Match.module.css';
 import poolStyles from '@/components/pools/Pools.module.css';
 
 interface HistoryListProps {
   poolId: string;
+  members?: any[];
+  currentUserId?: string;
 }
 
 interface Match {
@@ -30,11 +34,13 @@ interface Prediction {
   points: number | null;
 }
 
-export function HistoryList({ poolId }: HistoryListProps) {
+export function HistoryList({ poolId, members = [], currentUserId = '' }: HistoryListProps) {
   const [matches, setMatches] = useState<Match[]>([]);
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>(currentUserId);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -44,7 +50,7 @@ export function HistoryList({ poolId }: HistoryListProps) {
       try {
         const [matchesRes, predictionsRes] = await Promise.all([
           fetch('/api/matches?history=true'),
-          fetch(`/api/predictions?poolId=${poolId}`),
+          fetch(`/api/predictions?poolId=${poolId}&userId=${selectedMemberId}`),
         ]);
 
         if (matchesRes.ok) {
@@ -66,7 +72,7 @@ export function HistoryList({ poolId }: HistoryListProps) {
     }
 
     fetchData();
-  }, [poolId]);
+  }, [poolId, selectedMemberId]);
 
   const [activeDateIndex, setActiveDateIndex] = useState<number>(0);
 
@@ -142,6 +148,10 @@ export function HistoryList({ poolId }: HistoryListProps) {
     month: '2-digit' 
   }).toUpperCase();
 
+  const selectedMember = members.find(m => m.user_id === selectedMemberId);
+  const selectedMemberName = selectedMember?.profile?.nickname || 'Membro';
+  const selectedMemberAvatar = selectedMember?.profile?.avatar_url;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-6)' }}>
       {/* Navegação de Datas */}
@@ -194,6 +204,39 @@ export function HistoryList({ poolId }: HistoryListProps) {
         </button>
       </div>
 
+      {/* Seleção de Membros (Entre a data e os jogos) */}
+      {members.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-3)' }}>
+          <Button 
+            variant="secondary" 
+            size="sm" 
+            onClick={() => setIsModalOpen(true)}
+            style={{ padding: '0 var(--space-3)', fontSize: 'var(--text-xs)', height: '28px' }}
+          >
+            Filtrar Membro
+          </Button>
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <div style={{ 
+              width: 32, height: 32, borderRadius: '50%', backgroundColor: 'var(--color-bg)', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+              border: '1px solid var(--color-brand-gold)'
+            }}>
+              {selectedMemberAvatar ? (
+                <img src={selectedMemberAvatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <span style={{ fontWeight: 'bold', fontSize: 'var(--text-xs)', color: 'var(--color-text)' }}>
+                  {selectedMemberName.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <span style={{ fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--color-brand-gold)' }}>
+              {selectedMemberName}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Lista de Jogos do Dia */}
       <ul className={styles.matchList}>
         {activeMatches.map((match) => {
@@ -206,11 +249,21 @@ export function HistoryList({ poolId }: HistoryListProps) {
                 poolId={poolId}
                 existingPrediction={prediction}
                 readOnly={true}
+                predictionOwnerName={selectedMemberId !== currentUserId ? selectedMemberName : undefined}
               />
             </li>
           );
         })}
       </ul>
+
+      {isModalOpen && (
+        <MemberSelectModal
+          members={members}
+          currentUserId={currentUserId}
+          onSelect={setSelectedMemberId}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

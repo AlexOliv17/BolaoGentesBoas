@@ -31,9 +31,13 @@ export async function GET(request: NextRequest) {
     const statusFilter = searchParams.get('status');
 
     // 2. Buscar jogos (com cache inteligente)
-    const matches = isHistory 
+    let matches = isHistory 
       ? await footballDataSource.getHistoricalMatches()
       : await footballDataSource.getTodaysMatches();
+
+    if (isHistory) {
+      matches = matches.filter(m => m.status === 'finished');
+    }
 
     // 3. Filtrar por status, se informado
     const filteredMatches = statusFilter

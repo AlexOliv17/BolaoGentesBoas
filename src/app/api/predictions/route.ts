@@ -118,23 +118,56 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const poolId = searchParams.get('poolId');
+    const requestedUserId = searchParams.get('userId');
 
     if (!poolId) {
       return NextResponse.json({ error: 'poolId é obrigatório' }, { status: 422 });
     }
 
+    const targetUserId = requestedUserId || user.id;
+    const isOtherUser = targetUserId !== user.id;
+
     const { data: predictions, error } = await supabase
       .from('predictions')
-      .select('match_id, home_guess, away_guess, points')
+      .select(`
+        match_id, 
+        home_guess, 
+        away_guess, 
+        points,
+        matches!inner(status, kickoff_at)
+      `)
       .eq('pool_id', poolId)
-      .eq('user_id', user.id);
+      .eq('user_id', targetUserId);
 
     if (error) {
       console.error('[GET /api/predictions] Error:', error);
       return NextResponse.json({ error: 'Erro ao buscar palpites' }, { status: 400 });
     }
 
-    return NextResponse.json({ data: predictions || [] });
+    let result = predictions || [];
+
+    if (isOtherUser) {
+      const now = new Date();
+      result = result.filter((p: any) => {
+        const match = p.matches;
+        if (match.status === 'finished') return true;
+        
+        const kickoff = new Date(match.kickoff_at);
+        const lockTime = new Date(kickoff.getTime() - 60000); // 1 minuto antes
+        
+        return now > lockTime;
+      });
+    }
+
+    // Formatar retorno para manter compatibilidade com a interface antiga
+    const cleanResult = result.map((p: any) => ({
+      match_id: p.match_id,
+      home_guess: p.home_guess,
+      away_guess: p.away_guess,
+      points: p.points
+    }));
+
+    return NextResponse.json({ data: cleanResult });
   } catch (error) {
     return handleApiError(error);
   }

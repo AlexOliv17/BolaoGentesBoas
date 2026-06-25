@@ -28,11 +28,12 @@ interface MatchCardProps {
     points: number | null;
   } | null;
   readOnly?: boolean;
+  predictionOwnerName?: string;
 }
 
 type FeedbackState = 'idle' | 'saving' | 'saved' | 'error' | 'locked';
 
-export function MatchCard({ match, poolId, existingPrediction, readOnly = false }: MatchCardProps) {
+export function MatchCard({ match, poolId, existingPrediction, readOnly = false, predictionOwnerName }: MatchCardProps) {
   const [homeGuess, setHomeGuess] = useState<string>(
     existingPrediction?.home_guess?.toString() ?? ''
   );
@@ -199,7 +200,9 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false 
       {editable ? (
         // Jogo aberto: formulário de palpite
         <>
-          <p className={styles.predictionLabel}>Seu palpite</p>
+          <p className={styles.predictionLabel}>
+            {predictionOwnerName ? `Palpite de ${predictionOwnerName}` : 'Seu palpite'}
+          </p>
           <div className={styles.predictionForm}>
             
             <div className={styles.stepperContainer}>
@@ -282,7 +285,7 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false 
           {existingPrediction ? (
             <>
               <p className={styles.predictionLabel}>
-                Seu palpite: {existingPrediction.home_guess} × {existingPrediction.away_guess}
+                {predictionOwnerName ? `Palpite de ${predictionOwnerName}:` : 'Seu palpite:'} {existingPrediction.home_guess} × {existingPrediction.away_guess}
                 {existingPrediction.home_guess === existingPrediction.away_guess && existingPrediction.penalty_winner_guess && (
                   <span style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--color-warning)', marginTop: 4 }}>
                     ({existingPrediction.penalty_winner_guess === 'home' ? match.homeTeam : match.awayTeam} vence nos pênaltis)

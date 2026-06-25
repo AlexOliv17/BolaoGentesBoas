@@ -70,7 +70,7 @@ export function PoolTabs({ pool, members, currentUserId, friendshipStatusMap }: 
 
       {/* Tabs Content */}
       <div className={styles.tabContent}>
-        {activeTab === 'history' && <HistoryList poolId={pool.id} />}
+        {activeTab === 'history' && <HistoryList poolId={pool.id} members={members} currentUserId={currentUserId} />}
         {activeTab === 'matches' && <MatchesList poolId={pool.id} />}
         {activeTab === 'ranking' && <RankingTab poolId={pool.id} />}
         {activeTab === 'members' && <MembersTab pool={pool} members={members} currentUserId={currentUserId} friendshipStatusMap={friendshipStatusMap} />}
