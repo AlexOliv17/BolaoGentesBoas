@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
       : await footballDataSource.getTodaysMatches();
 
     if (isHistory) {
-      matches = matches.filter(m => m.status === 'finished');
+      matches = matches.filter(m => m.status === 'finished' || m.status === 'live');
     }
 
     // 3. Filtrar por status, se informado
