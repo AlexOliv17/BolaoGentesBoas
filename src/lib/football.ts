@@ -94,10 +94,10 @@ function mapApiMatchToInternal(apiMatch: FootballDataApiMatch): FootballMatch {
 
   return {
     id: apiMatch.id,
-    homeTeam: apiMatch.homeTeam.shortName || apiMatch.homeTeam.name,
-    awayTeam: apiMatch.awayTeam.shortName || apiMatch.awayTeam.name,
-    homeTeamCrest: apiMatch.homeTeam.crest || null,
-    awayTeamCrest: apiMatch.awayTeam.crest || null,
+    homeTeam: apiMatch.homeTeam?.shortName || apiMatch.homeTeam?.name || 'A definir',
+    awayTeam: apiMatch.awayTeam?.shortName || apiMatch.awayTeam?.name || 'A definir',
+    homeTeamCrest: apiMatch.homeTeam?.crest || null,
+    awayTeamCrest: apiMatch.awayTeam?.crest || null,
     kickoffAt: apiMatch.utcDate,
     status: mapApiStatus(apiMatch.status),
     homeScore: apiMatch.score.fullTime.home,
