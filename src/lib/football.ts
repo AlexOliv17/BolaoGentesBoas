@@ -183,15 +183,15 @@ class FootballDataOrg implements FootballDataSource {
 
     const rows = apiMatches.map((m) => ({
       id: m.id,
-      home_team: m.homeTeam.shortName || m.homeTeam.name,
-      away_team: m.awayTeam.shortName || m.awayTeam.name,
+      home_team: m.homeTeam?.shortName || m.homeTeam?.name || 'A definir',
+      away_team: m.awayTeam?.shortName || m.awayTeam?.name || 'A definir',
       kickoff_at: m.utcDate,
       status: mapApiStatus(m.status),
       home_score: m.score.fullTime.home,
       away_score: m.score.fullTime.away,
       matchday: m.matchday || null,
-      home_team_crest: m.homeTeam.crest || null,
-      away_team_crest: m.awayTeam.crest || null,
+      home_team_crest: m.homeTeam?.crest || null,
+      away_team_crest: m.awayTeam?.crest || null,
       group_name: formatGroupName(m.group),
       stage: m.stage || 'GROUP_STAGE',
       penalty_winner: m.score.duration === 'PENALTY_SHOOTOUT' && m.score.winner 
