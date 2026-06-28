@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     // 3. Buscar os jogos finalizados (status = 'finished')
     const { data: finishedMatches, error: matchesErr } = await supabase
       .from('matches')
-      .select('id, home_score, away_score, status')
+      .select('id, home_score, away_score, status, stage, penalty_winner')
       .eq('status', 'finished');
 
     if (matchesErr) throw matchesErr;
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     // 4. Buscar palpites pendentes (points IS NULL) para esses jogos
     const { data: pendingPredictions, error: predErr } = await supabase
       .from('predictions')
-      .select('id, home_guess, away_guess, match_id')
+      .select('id, home_guess, away_guess, match_id, penalty_winner_guess')
       .in('match_id', finishedMatchIds)
       .is('points', null);
 
@@ -75,11 +75,15 @@ export async function GET(request: Request) {
       
       if (!match || match.home_score === null || match.away_score === null) return;
 
+      const isKnockout = match.stage !== 'GROUP_STAGE';
       const points = calculatePoints(
         prediction.home_guess,
         prediction.away_guess,
         match.home_score,
-        match.away_score
+        match.away_score,
+        isKnockout,
+        prediction.penalty_winner_guess ?? null,
+        match.penalty_winner ?? null,
       );
 
       const { error: updateErr } = await supabase
