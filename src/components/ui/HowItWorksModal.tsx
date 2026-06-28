@@ -114,21 +114,21 @@ export function HowItWorksModal({ forceOpen, onClose }: HowItWorksModalProps) {
                 <span className={`${styles.pts} ${styles.exact}`}>2</span>
                 <div>
                   <strong>Placar exato</strong>
-                  <p>Acertou o placar completo (e os pênaltis, se houver)</p>
+                  <p>Acertou o placar completo. No mata-mata com palpite de empate, também precisa acertar quem passa nos pênaltis.</p>
                 </div>
               </li>
               <li className={styles.scoringItem}>
                 <span className={`${styles.pts} ${styles.result}`}>1</span>
                 <div>
-                  <strong>Resultado certo</strong>
-                  <p>Acertou vitória, empate ou quem passa nos pênaltis</p>
+                  <strong>Acerto parcial</strong>
+                  <p>Acertou o vencedor mas errou o placar. No mata-mata com palpite de empate, vale também se acertar só o placar ou só os pênaltis.</p>
                 </div>
               </li>
               <li className={styles.scoringItem}>
                 <span className={`${styles.pts} ${styles.wrong}`}>0</span>
                 <div>
                   <strong>Errou</strong>
-                  <p>Resultado diferente do palpite</p>
+                  <p>Errou o resultado. Palpitar vitória direta quando o jogo foi para pênaltis também vale 0 pts.</p>
                 </div>
               </li>
             </ul>

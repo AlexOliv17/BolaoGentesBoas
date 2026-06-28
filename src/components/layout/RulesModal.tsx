@@ -43,21 +43,21 @@ export function RulesModal({ autoOpen = false }: { autoOpen?: boolean }) {
                   <span className={`${styles.pointValue} ${styles.gold}`}>2 pts</span>
                   <strong>Na Mosca (Placar Exato)</strong>
                   <p style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
-                    Acertou a quantidade exata de gols de cada time. (Ex: Palpitou 2x1, Terminou 2x1). Em caso de empate no mata-mata, também precisa acertar quem vence nos pênaltis.
+                    Acertou a quantidade exata de gols. (Ex: Palpitou 2×1, ficou 2×1.) Se palpitou empate no mata-mata, também precisa acertar quem passou nos pênaltis para valer 2 pts.
                   </p>
                 </div>
                 <div className={styles.ruleBox}>
                   <span className={styles.pointValue}>1 pt</span>
-                  <strong>Acerto de Resultado</strong>
+                  <strong>Acerto Parcial</strong>
                   <p style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
-                    Acertou quem venceu ou quem passou nos pênaltis, mas errou o placar exato. (Ex: Palpitou 1x0, Terminou 3x1)
+                    Acertou o vencedor (ou empate) mas errou o placar. No mata-mata com palpite de empate: vale 1 pt se acertar <em>só o placar</em> ou <em>só quem passou nos pênaltis</em>.
                   </p>
                 </div>
                 <div className={styles.ruleBox}>
                   <span className={styles.pointValue} style={{ background: 'var(--color-surface-hover)', color: 'var(--color-text-secondary)' }}>0 pts</span>
-                  <strong>Errou feio</strong>
+                  <strong>Errou</strong>
                   <p style={{ marginTop: 'var(--space-1)', fontSize: 'var(--text-xs)' }}>
-                    Errou o resultado final e o vencedor dos pênaltis.
+                    Errou o resultado. Atenção: no mata-mata, palpitar vitória direta quando o jogo foi para pênaltis vale 0 pts — mesmo que seu time tenha avançado.
                   </p>
                 </div>
               </div>
