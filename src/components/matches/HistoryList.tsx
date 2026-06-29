@@ -31,6 +31,7 @@ interface Prediction {
   match_id: number;
   home_guess: number;
   away_guess: number;
+  penalty_winner_guess: 'home' | 'away' | null;
   points: number | null;
 }
 

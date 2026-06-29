@@ -133,6 +133,7 @@ export async function GET(request: NextRequest) {
         match_id, 
         home_guess, 
         away_guess, 
+        penalty_winner_guess,
         points,
         matches!inner(status, kickoff_at)
       `)
@@ -164,6 +165,7 @@ export async function GET(request: NextRequest) {
       match_id: p.match_id,
       home_guess: p.home_guess,
       away_guess: p.away_guess,
+      penalty_winner_guess: p.penalty_winner_guess ?? null,
       points: p.points
     }));
 
