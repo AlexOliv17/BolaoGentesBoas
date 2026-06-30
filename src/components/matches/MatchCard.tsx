@@ -156,11 +156,27 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false,
     : match.status === 'finished' ? 'Encerrado'
     : toDisplayTime(match.kickoffAt);
 
+  const getStageDisplay = () => {
+    if (match.groupName) return match.groupName;
+    if (match.stage && match.stage !== 'GROUP_STAGE') {
+      switch (match.stage) {
+        case 'LAST_32': return '16-avos de Final';
+        case 'LAST_16': return 'Oitavas de Final';
+        case 'QUARTER_FINALS': return 'Quartas de Final';
+        case 'SEMI_FINALS': return 'Semifinal';
+        case 'THIRD_PLACE': return 'Disputa de 3º Lugar';
+        case 'FINAL': return 'Final';
+        default: return 'Mata-Mata';
+      }
+    }
+    return match.matchday ? `Rodada ${match.matchday}` : '';
+  };
+
   return (
     <div className={styles.matchCard} data-status={match.status}>
       {/* Meta: grupo + status */}
       <div className={styles.matchMeta}>
-        <span>{match.groupName || `Rodada ${match.matchday}`}</span>
+        <span>{getStageDisplay()}</span>
         <span className={styles.matchStatus} data-status={match.status}>
           {match.status === 'live' && <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'currentColor', display: 'inline-block' }} />}
           {statusLabel}
