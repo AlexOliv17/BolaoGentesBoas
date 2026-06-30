@@ -85,12 +85,31 @@ function formatGroupName(group: string | null): string | null {
   return `Grupo ${letter}`;
 }
 
+/**
+ * Retorna o placar do tempo normal de um jogo da API.
+ *
+ * ⚠️  A API football-data.org retorna em `score.fullTime` o placar ACUMULADO
+ * (tempo normal + pênaltis) quando o jogo vai a pênaltis. O placar real do
+ * tempo normal fica em `score.regularTime`. Exemplo: jogo 1×1 com pênaltis
+ * 3×2 → fullTime = 4×3, regularTime = 1×1.
+ *
+ * Portanto: para jogos de pênaltis, usar `regularTime`; caso contrário, `fullTime`.
+ */
+function getRegularTimeScore(apiMatch: FootballDataApiMatch): { home: number | null; away: number | null } {
+  if (apiMatch.score.duration === 'PENALTY_SHOOTOUT' && apiMatch.score.regularTime) {
+    return apiMatch.score.regularTime;
+  }
+  return apiMatch.score.fullTime;
+}
+
 /** Converte um jogo da API externa para o formato interno */
 function mapApiMatchToInternal(apiMatch: FootballDataApiMatch): FootballMatch {
   let penaltyWinner: 'home' | 'away' | null = null;
   if (apiMatch.score.duration === 'PENALTY_SHOOTOUT' && apiMatch.score.winner) {
     penaltyWinner = apiMatch.score.winner === 'HOME_TEAM' ? 'home' : 'away';
   }
+
+  const regularScore = getRegularTimeScore(apiMatch);
 
   return {
     id: apiMatch.id,
@@ -100,8 +119,8 @@ function mapApiMatchToInternal(apiMatch: FootballDataApiMatch): FootballMatch {
     awayTeamCrest: apiMatch.awayTeam?.crest || null,
     kickoffAt: apiMatch.utcDate,
     status: mapApiStatus(apiMatch.status),
-    homeScore: apiMatch.score.fullTime.home,
-    awayScore: apiMatch.score.fullTime.away,
+    homeScore: regularScore.home,
+    awayScore: regularScore.away,
     matchday: apiMatch.matchday || null,
     groupName: formatGroupName(apiMatch.group),
     stage: apiMatch.stage || 'GROUP_STAGE',
@@ -181,24 +200,28 @@ class FootballDataOrg implements FootballDataSource {
     const supabase = createMatchesClient();
     const now = new Date().toISOString();
 
-    const rows = apiMatches.map((m) => ({
-      id: m.id,
-      home_team: m.homeTeam?.shortName || m.homeTeam?.name || 'A definir',
-      away_team: m.awayTeam?.shortName || m.awayTeam?.name || 'A definir',
-      kickoff_at: m.utcDate,
-      status: mapApiStatus(m.status),
-      home_score: m.score.fullTime.home,
-      away_score: m.score.fullTime.away,
-      matchday: m.matchday || null,
-      home_team_crest: m.homeTeam?.crest || null,
-      away_team_crest: m.awayTeam?.crest || null,
-      group_name: formatGroupName(m.group),
-      stage: m.stage || 'GROUP_STAGE',
-      penalty_winner: m.score.duration === 'PENALTY_SHOOTOUT' && m.score.winner 
-        ? (m.score.winner === 'HOME_TEAM' ? 'home' : 'away') 
-        : null,
-      last_synced_at: now,
-    }));
+    const rows = apiMatches.map((m) => {
+      const regularScore = getRegularTimeScore(m);
+      return {
+        id: m.id,
+        home_team: m.homeTeam?.shortName || m.homeTeam?.name || 'A definir',
+        away_team: m.awayTeam?.shortName || m.awayTeam?.name || 'A definir',
+        kickoff_at: m.utcDate,
+        status: mapApiStatus(m.status),
+        // Usar placar do tempo normal, não o acumulado com pênaltis
+        home_score: regularScore.home,
+        away_score: regularScore.away,
+        matchday: m.matchday || null,
+        home_team_crest: m.homeTeam?.crest || null,
+        away_team_crest: m.awayTeam?.crest || null,
+        group_name: formatGroupName(m.group),
+        stage: m.stage || 'GROUP_STAGE',
+        penalty_winner: m.score.duration === 'PENALTY_SHOOTOUT' && m.score.winner 
+          ? (m.score.winner === 'HOME_TEAM' ? 'home' : 'away') 
+          : null,
+        last_synced_at: now,
+      };
+    });
 
     const { error } = await supabase
       .from('matches')

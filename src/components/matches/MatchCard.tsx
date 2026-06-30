@@ -177,14 +177,28 @@ export function MatchCard({ match, poolId, existingPrediction, readOnly = false,
         </div>
 
         <div className={styles.matchScore}>
-          {match.status !== 'scheduled' ? (
-            <>
-              <span>{match.homeScore ?? 0}</span>
-              <span className={styles.scoreSeparator}>×</span>
-              <span>{match.awayScore ?? 0}</span>
-            </>
-          ) : (
-            <span className={styles.scoreSeparator} style={{ fontSize: 'var(--text-xl)' }}>vs</span>
+          <div className={styles.matchScoreRow}>
+            {match.status !== 'scheduled' ? (
+              <>
+                <span>{match.homeScore ?? 0}</span>
+                <span className={styles.scoreSeparator}>×</span>
+                <span>{match.awayScore ?? 0}</span>
+              </>
+            ) : (
+              <span className={styles.scoreSeparator} style={{ fontSize: 'var(--text-xl)' }}>vs</span>
+            )}
+          </div>
+          {match.status === 'finished' && match.penaltyWinner && (
+            <span style={{
+              display: 'block',
+              fontSize: 'var(--text-xs)',
+              color: 'var(--color-warning)',
+              fontWeight: 600,
+              marginTop: 'var(--space-1)',
+              whiteSpace: 'nowrap',
+            }}>
+              {match.penaltyWinner === 'home' ? match.homeTeam : match.awayTeam} venceu nos pênaltis
+            </span>
           )}
         </div>
 

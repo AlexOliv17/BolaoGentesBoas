@@ -25,6 +25,8 @@ interface Match {
   awayScore: number | null;
   matchday: number | null;
   groupName: string | null;
+  stage?: string;
+  penaltyWinner?: 'home' | 'away' | null;
 }
 
 interface Prediction {
