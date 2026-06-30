@@ -93,14 +93,47 @@ function formatGroupName(group: string | null): string | null {
  * tempo normal fica em `score.regularTime`. Exemplo: jogo 1×1 com pênaltis
  * 3×2 → fullTime = 4×3, regularTime = 1×1.
  *
- * Portanto: para jogos de pênaltis, usar `regularTime`; caso contrário, `fullTime`.
+ * Estratégia (em ordem de prioridade):
+ *   1. Usa `regularTime` diretamente (campo preferencial).
+ *   2. Se `regularTime` for nulo, calcula `fullTime − penalties` (fallback).
+ *   3. Se `penalties` também for nulo, usa `fullTime` como último recurso.
  */
 function getRegularTimeScore(apiMatch: FootballDataApiMatch): { home: number | null; away: number | null } {
-  if (apiMatch.score.duration === 'PENALTY_SHOOTOUT' && apiMatch.score.regularTime) {
+  if (apiMatch.score.duration !== 'PENALTY_SHOOTOUT') {
+    return apiMatch.score.fullTime;
+  }
+
+  // 1ª opção: regularTime (campo mais confiável)
+  if (
+    apiMatch.score.regularTime &&
+    apiMatch.score.regularTime.home !== null &&
+    apiMatch.score.regularTime.away !== null
+  ) {
     return apiMatch.score.regularTime;
   }
+
+  // 2ª opção: calcular a partir de fullTime − penalties
+  const penalties = apiMatch.score.penalties;
+  const full      = apiMatch.score.fullTime;
+
+  if (
+    penalties &&
+    penalties.home !== null &&
+    penalties.away !== null &&
+    full.home     !== null &&
+    full.away     !== null
+  ) {
+    return {
+      home: full.home - penalties.home,
+      away: full.away - penalties.away,
+    };
+  }
+
+  // 3ª opção: último recurso (pode estar errado para pênaltis, mas é o que temos)
+  console.warn(`[football.ts] Jogo ${apiMatch.id}: PENALTY_SHOOTOUT sem regularTime nem penalties — usando fullTime como fallback.`);
   return apiMatch.score.fullTime;
 }
+
 
 /** Converte um jogo da API externa para o formato interno */
 function mapApiMatchToInternal(apiMatch: FootballDataApiMatch): FootballMatch {
